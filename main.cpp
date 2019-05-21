@@ -1,4 +1,4 @@
-// Last Edit 16-th May 2019
+// Last Edit 21-th May 2019
 #include "in.h" 		//for ntohs() and htons()
 #include "stdlib.h"
 #include "Packet.h" 		// includes basic parsed packet structures	
@@ -11,6 +11,7 @@
 #include "PcapFileDevice.h" 	//contains API fro reading pcap files
 				//For printing protocol
 #include "string.h"
+#include "time.h"
 
 std::string cleanString(char* s){
 
@@ -71,7 +72,6 @@ int printRadiusProtocolDetailsAsString(pcpp::RadiusLayer* radiusLayer){
 		printf("Something Wrong");
 		return 1;
 	}
-//	printf("\t\tFirst Attribute: %s \n", radiusLayer->getFirstAttribute());
 	printf("\t\tAttribute Count:\t\t %d\t\t\n",radiusLayer->getAttributeCount());
 	//printf("\t\t|Athencticator  : 0x%X \n",radiusLayer->getAuthenticatorValue());
 	printf("\t\tMessage ID     :\t\t %d\t\t\n",radiusLayer->getRadiusHeader()->id);
@@ -82,11 +82,7 @@ int printRadiusProtocolDetailsAsString(pcpp::RadiusLayer* radiusLayer){
         }	
         char callingStationId[12]="";
         strncpy(callingStationId,(char*)radiusLayer->getAttribute(31).getValue(),11);
-	//printf("\t\t|AVP-Type 30    :\t\t %s\t|\n",radiusLayer->getAttribute(30).getValue());
 	printf("\t\tAVP-Type 31    :\t\t %s\t\n",callingStationId);
-//	iprintf("\t\t|AVP-Type 01    :\t\t %s\t|\n",radiusLayer->
-//	printf("\t\t|AVP-Type 40    :\t\t %s\t|\n",radiusLayer->getAttribute(40).getValue());
-//	printf("\t\t|AVP-Type 02    :\t\t %s\t|\n",radiusLayer->getAttribute(2).getValue());
 	printf("\t\t--------------------------------------------------\n");
 }
 
@@ -100,7 +96,6 @@ int printTCPProtocolDetailsAsString(pcpp::TcpLayer* tcpLayer){
 	printf("\t\tSource TCP port: %d\n",(int)ntohs(tcpLayer->getTcpHeader()->portSrc));
 	printf("\t\tDestination TCP port: %d\n",(int)ntohs(tcpLayer->getTcpHeader()->portDst));
 	printf("\t\tWindow Size: %d\n",(int)ntohs(tcpLayer->getTcpHeader()->windowSize));
-//	printf("TCP Flags: %d\n",printTcpFlags(tcpLayer).c_str());
 	printf("\n\t\t--------------------------------------------------\n");
 }
 
@@ -124,6 +119,10 @@ int main(int argc, char* argv[]){
 	//for counting packets	
 	unsigned long  packet_count=1; 
 
+        //variables for time
+        clock_t tStart, tEnd, diff,cpu_time_used;
+        //double diff;
+        //double cpu_time_used;
 
 	//Use IFileReaderDevice to automatically indentify file type (pcap/pcap-ng)
 	//and create an interface that both readers implement
@@ -144,32 +143,33 @@ int main(int argc, char* argv[]){
 
 	//Read first Raw packet from the file
 	pcpp::RawPacket rawPacket;
+
+        //Start Time
+        tStart= clock();
+
         while (reader->getNextPacket(rawPacket)){ //&& packet_count<=86){
-//	if(!reader->getNextPacket(rawPacket)){
-  //          printf("couldnt read the packet in the file\n");
-//	    return 1;
-//	}
-        if(packet_count<=23689){
-          packet_count++;
-          continue;
-        }	
+       /* 
+        if(packet_count>=2){
+            break;
+         }	
+*/
         //Parse Raw Packet into a parsed packet
 	pcpp::Packet parsedPacket(&rawPacket);
-	printf("\n*****************************************PACKET# %2d************************************************\n",packet_count);	
+//	printf("\n*****************************************PACKET# %2d************************************************\n",packet_count);	
 
 	for (pcpp::Layer* curLayer = parsedPacket.getFirstLayer(); curLayer != NULL; curLayer = curLayer->getNextLayer()){
-		printf("------------------------------------------------------------------------------------------------------\n");	
+//		printf("------------------------------------------------------------------------------------------------------\n");	
 		//getProcotol() - get enum of the protocol the layer represents
 		//getHeaderLen() - get the size of the layers's bheader, meaning the size of the layer data
 		//getLayerPayLoadSize() - get the size of the layer's payload, meaning the size of all the
 		//layers that follow this layer
 		//getDataLen() - get the total size fo the layer: header + payload
-		printf("Layer type: %s; Total data %d [bytes]; Layer data: %d [bytes]; Layer payload: %d [bytes]\n",
+/*		printf("Layer type: %s; Total data %d [bytes]; Layer data: %d [bytes]; Layer payload: %d [bytes]\n",
 			getProtocolTypeAsString(curLayer->getProtocol()).c_str(),
 			(int)curLayer->getDataLen(),
 			(int)curLayer->getHeaderLen(),
 			(int)curLayer->getLayerPayloadSize());
-
+*/
 /*		if(strcmp(getProtocolTypeAsString(curLayer->getProtocol()).c_str(),"Radius")==0){
 			printf("\nTHIS IS RADIUS\n");
 			if(curLayer == NULL){
@@ -180,58 +180,124 @@ int main(int argc, char* argv[]){
 		switch (curLayer->getProtocol()){
 			case pcpp::Ethernet:
 				{
-                                printf("Ethernet");
+                                //What We Need from this Layer
+                                //sourceMac,
+                                //DestinationMac
+  //                              printf("Ethernet");
 				pcpp::EthLayer* ethernetLayer = parsedPacket.getLayerOfType<pcpp::EthLayer>();
-				printEthernetProtocolDetailsAsString(ethernetLayer);
+
+                                char sourceMac[20]="";  
+                                char destMac[20]="";  
+                                strcpy(sourceMac,ethernetLayer->getSourceMac().toString().c_str());
+                                strcpy(destMac,ethernetLayer->getDestMac().toString().c_str());
+
+                                //use one of the following
+ //                               printf("\nsource %s ,Destination %s \n",sourceMac,destMac);
+                                //or
+				//printEthernetProtocolDetailsAsString(ethernetLayer);
 				}	
 				break;
 			case pcpp::IPv4:
 				{
-                                printf("IPv4");
+                                //What we need from this Layer
+                                //SourceIP,
+                                //DestinationIP,
+                                //IPid
+                                //timeToLive
+  //                              printf("IPv4");
 				pcpp::IPv4Layer* ipLayer = parsedPacket.getLayerOfType<pcpp::IPv4Layer>();
-				printIPv4ProtocolDetailsAsString(ipLayer);
+                                char sourceIP[15]="";
+                                char destIP[15]="";
+                                strcpy(sourceIP,ipLayer->getSrcIpAddress().toString().c_str());
+                                strcpy(destIP,ipLayer->getDstIpAddress().toString().c_str());
+                                int id=ntohs(ipLayer->getIPv4Header()->ipId);
+                                int ttl=ipLayer->getIPv4Header()->timeToLive;
+        //                        printf("IP %s->%s\n",sourceIP,destIP);
+  //                              printf("ID:  %d , ttl: %d\n",id,ttl);
+                                //or
+				//printIPv4ProtocolDetailsAsString(ipLayer);
 				}
 				break;
 			case pcpp::TCP:
 				{
-                                printf("TCP");
+                                //Dont need anything from here rigth now
+ //                               printf("TCP");
 				pcpp::TcpLayer* tcpLayer = parsedPacket.getLayerOfType<pcpp::TcpLayer>();
-				printTCPProtocolDetailsAsString(tcpLayer);
+				//printTCPProtocolDetailsAsString(tcpLayer);
 				}
 				break;
 			case pcpp::Radius:
 				{
-                                printf("Radius");
-                                
-                                //printf("%s\n",getProtocolTypeAsString(curLayer->getProtocol()).c_str());
-			    //    if((int)curLayer->getHeaderLen()<=20){
-                              //    printf("packet # %d, Header Len %d",packet_count,curLayer->getHeaderLen());
-                               // }
+                                //what we want )from Radius Layer
+                                //Attribute Count
+                                //AuthenticatorValue
+                                //CallingStationID
+                                //calledStationID
+//                                printf("Radius");
 				pcpp::RadiusLayer* radiusLayer = parsedPacket.getLayerOfType<pcpp::RadiusLayer>();
                                 if(radiusLayer->getHeaderLen()<=64){
-                                  printf("Radius Header %d",radiusLayer->getHeaderLen());
-                                  exit(1);
+                                 //printf("Radius Header %d",radiusLayer->getHeaderLen());
+                                 // exit(1);
+                                 packet_count++;
+                                 continue;
                                 }
-				printRadiusProtocolDetailsAsString(radiusLayer);
+                                int attributeCount = radiusLayer->getAttributeCount();
+                                int MessageID = radiusLayer->getRadiusHeader()->id;
+                                int MessageCode = radiusLayer->getRadiusHeader()->code;
+                                char usrname[20]="";
+                                char callingStationID[12]="";
+                                if(!radiusLayer->getAttribute(1).isNull()){
+                                  strcpy(usrname,(char*)radiusLayer->getAttribute(1).getValue());
+                                }
+                                strncpy(callingStationID,(char*)radiusLayer->getAttribute(31).getValue(),11);
+
+                                //print Result
+    //                            printf("\nAttr Count: %d , MSG ID: %d , MSG Code: %d",attributeCount,MessageID,MessageCode); 
+    //                            printf("\nAttributes:\n");
+    //                            printf("AVP=TYPE 01 : %s\n",usrname);
+    //                            printf("AVP=TYPE 31 : %s\n",callingStationID);
+				//printRadiusProtocolDetailsAsString(radiusLayer);
 				}
 				break;
 			case pcpp::UDP:
 				{
-                                printf("UDP");
+                                //What we want
+                                //Source Port
+                                //Destination Port
+      //                          printf("UDP");
 				pcpp::UdpLayer* udpLayer = parsedPacket.getLayerOfType<pcpp::UdpLayer>();
-				printUDPProtocolDetailsAsString(udpLayer);
+                                int sourcePort = (int)ntohs(udpLayer->getUdpHeader()->portSrc);
+                                int dstPort = (int)ntohs(udpLayer->getUdpHeader()->portDst);
+
+                                //use one
+      //                          printf ("\n Source Port: %d , Dest Port: %d\n",sourcePort,dstPort);
+                                //or
+				//printUDPProtocolDetailsAsString(udpLayer);
 				}
 				break;
 			default:
-				printf("Unknown");
+                                {
+				//printf("Unknown");
+                                //printf(" Packet : %d\n",packet_count);
+                                }
 		}
 	
         }
 
         packet_count++;	
+//        printf("(%d)",packet_count);
         
         }
 
 	reader->close();
+        diff = tEnd - tStart;
+        cpu_time_used = (double)(diff/CLOCKS_PER_SEC);
+//        printf("\nTime used to parse %d packets is %.2d(%.2d clicks)\n",packet_count,cpu_time_used,diff);
+        printf("Packets %d\n",packet_count);
+        printf("CpuClicks %d\n",(double)diff);
+        printf("\nClocks per second %d\n",CLOCKS_PER_SEC);
+        printf("\n tStart-> tEnd : %d->%d\n",tStart,tEnd);
+        printf("difftime : %d\n",diff);
+        printf("time %.8d\n",(double)diff/100000);  
         return 0;
 }	 
