@@ -16,9 +16,9 @@
 #include <vector>
 #include <numeric>
 
-size_t count=0; //total packet count
-size_t totalRadiusPackets=0; //total radius pacekets
-
+size_t count = 0;             //total packet count
+size_t totalRadiusPackets = 0;//total radius pacekets
+size_t not_radius = 0;        //not radius packets
 //Usage Help
 void printHelp(char* argv[]){
   std::cout<<"\tusage: "<<*argv<<"<input> <packets> <repetitions>\n";
@@ -30,8 +30,7 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
-class PacketInfo{
-  public:
+struct PacketInfo{
     //src ip
     //dst ip
     //src mac
@@ -44,66 +43,95 @@ class PacketInfo{
 };
 
 //Handle Radius Packet
-bool handle_radius(pcpp::Packet& packet){
+int handle_radius(pcpp::Packet& packet){
   count++;
   if(!packet.isPacketOfType(pcpp::Radius)){
-    return true;
+    //std::cout << "not radius!\n"; 
+    not_radius++;
+    return 1;
   }
   pcpp::RadiusLayer* radiusLayer = packet.getLayerOfType<pcpp::RadiusLayer>();
   totalRadiusPackets++;
  if(radiusLayer==NULL){
   std::cout<<"Couldn't read radius Layer\n";
-  return true;
+  return 1;
  }
  int attr_count = radiusLayer->getAttributeCount();
  int MessageID = radiusLayer->getRadiusHeader()->id;
  int code = radiusLayer->getRadiusHeader()->code;
- std::cout<<"radius attr count: "<<attr_count<<"\n";
- std::cout<<"radius message code: "<<MessageID<<"\n";
- std::cout<<"radius header code: "<<code<<"\n";
- std::cout<<"Attributes:--\n";
+ //std::cout<<"radius attr count: "<<attr_count<<"\n";
+ //std::cout<<"radius message code: "<<MessageID<<"\n";
+ //std::cout<<"radius header code: "<<code<<"\n";
+ //std::cout<<"Attributes:--\n";
  pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
- for(int i=0;i<10;i++){
-   std::cout<<"\tAVP: "<<i<<"\n";
-   int a_type= radiusAttribute.getType();
-   int a_total_size= radiusAttribute.getTotalSize();
-   int a_data_size= radiusAttribute.getDataSize();
-   std::cout<<"\t\ta_type: "<<a_type<<"\n";
-   std::cout<<"\t\ta_total_size: "<<a_total_size<<"\n";
-   std::cout<<"\t\ta_data_size: "<<a_data_size<<"\n";
-   radiusAttribute = radiusLayer->getNextAttribute(radiusAttribute);
- } 
+  
  radiusAttribute = radiusLayer->getAttribute(40);
  int a_type= radiusAttribute.getType();
  int a_data_size= radiusAttribute.getDataSize();
  int a_total_size = radiusAttribute.getTotalSize();
  //std::string value(radiusAttribute.getValue());
- std::cout<<"a_type: "<<a_type<<"\n";
- std::cout<<"a_total_size: "<<a_total_size<<"\n";
- std::cout<<"a_data_size :"<<a_data_size<<"\n";
+ //std::cout<<"a_type: "<<a_type<<"\n";
+ //std::cout<<"a_total_size: "<<a_total_size<<"\n";
+ //std::cout<<"a_data_size :"<<a_data_size<<"\n";
  //std::cout<<"value: "<<value<<"\n";
- std::cout<<"value: "<<radiusAttribute.getValue()<<"\n";
+ //std::cout<<"value: "<<radiusAttribute.getValue()<<"\n";
+/* 
+ // NAS-IO-Address (4)
+ // Data Type: ipv4addr
+ radiusAttribute = radiusLayer->getAttribute(4);
+ std::cout<<"value(4): "<<radiusAttribute.getValue()<<"\n";
+ 
+ // NAS-Port (5)
+ // Data Type: integer
+ radiusAttribute = radiusLayer->getAttribute(5);
+ std::cout<<"value(5): "<<radiusAttribute.getValue()<<"\n";
+ 
+ // Framed-IP-Address (8)
+ // Data Type: ipv4addr
+ radiusAttribute = radiusLayer->getAttribute(8);
+ std::cout<<"value(8): "<<radiusAttribute.getValue()<<"\n";
+ 
+ // Framed-IP-Netmask (9)
+ // Data Type: ipv4addr
+ radiusAttribute = radiusLayer->getAttribute(9);
+ std::cout<<"value(9): "<<radiusAttribute.getValue()<<"\n";
 
- std::cout<<"---------\n";
- return true; 
+ 
+ // Callback-Number (19)
+ // Data Type: text
+ radiusAttribute = radiusLayer->getAttribute(19);
+ std::cout<<"value(19): "<<radiusAttribute.getValue()<<"\n";
+ 
+ // Callback-ID (20)
+ // Data Type: text
+ radiusAttribute = radiusLayer->getAttribute(20);
+ std::cout<<"value(20): "<<radiusAttribute.getValue()<<"\n";
+
+ // Acct-Status-Type(40)
+ // Data Type: enum
+ radiusAttribute = radiusLayer->getAttribute(40);
+ std::cout<<"value(40): "<<radiusAttribute.getValue()<<"\n";
+*/
+ //std::cout<<"---------\n";
+ return 1; 
 }
 
 
 //For Future Use
-bool handle_packet(pcpp::Packet& packet){
+int handle_packet(pcpp::Packet& packet){
   //
   //
   //Enter Your Code Here
   //
   //
-  return true;
+  return 1;
 }
 
 int main(int argc, char* argv[]){
   if(argc!=4){
     printHelp(argv);
   }
-  std::cout<<"argv[1]: "<<argv[1]<<" argv2: "<<argv[2]<<" argv[3]: "<<argv[3]<<"\n";
+  std::cout << "argv[1]: " << argv[1] << " argv2: " << argv[2] << " argv[3]: " << argv[3] << "\n";
   std::chrono::high_resolution_clock myclock;
   std::string input_type(argv[1]); //input_type
   std::string packet_type(argv[2]); //packet_type
@@ -111,44 +139,47 @@ int main(int argc, char* argv[]){
   size_t total_packets=0;
   std::vector<std::chrono::high_resolution_clock::duration> durations;
   if(input_type!="n"){
-    std::cout<<"PcapFILE\n";
+
+    // Display filename
+    std::cout << "Using file: " << argv[1] << "\n";
     
-    for(int i=0;i<total_reps;i++){
+    for(int i=0; i<total_reps; i++){
       //Reset variables for next iteration
       count = 0;
-      totalRadiusPackets=0;
+      totalRadiusPackets = 0;
+      not_radius = 0;
       pcpp::IFileReaderDevice* reader = pcpp::IFileReaderDevice::getReader(argv[1]);
 
       //Check FileType -- Error 
       if(reader==NULL){
-        std::cout<<"Cannot determine file type:\n";
+        std::cout << "Cannot determine file type:\n";
         exit(1);
       }
     
       //Cannot Open file
       if(!reader->open()){
-        std::cout<<"Cannot open file for reading.\n";
+        std::cout << "Cannot open file for reading.\n";
         exit(1);
       }
 
       reader->open();
       std::chrono::high_resolution_clock::time_point start;
-      if(packet_type=="radius"){
-        start=std::chrono::high_resolution_clock::now();
+      if(packet_type == "radius"){
+        start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<=5){
+        while(reader->getNextPacket(raw_packet)){// && totalRadiusPackets<=5){
           pcpp::Packet packet(&raw_packet);
           handle_radius(packet);
         }
       }else{
-          std::cout<<"Not yet\n";
+          std::cout << "Not yet\n";
           start=std::chrono::high_resolution_clock::now();
           pcpp::RawPacket raw_packet;
           pcpp::Packet packet(&raw_packet);
           handle_packet(packet);
       }
       auto end = std::chrono::high_resolution_clock::now();
-      durations.push_back(end-start);
+      durations.push_back( end-start );
       total_packets += count;
       reader->close();
     
@@ -163,8 +194,13 @@ int main(int argc, char* argv[]){
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     auto total_time_in_ms = duration_cast<milliseconds>(total_time).count();
-    std::cout<<"(total_packets/total_reps) "<<total_packets/total_reps<<"\n";
-    std::cout<<"(total_time_in_ms/durations.size()) "<< (total_time_in_ms/durations.size())<<"\n";
+    std::cout << "(total_packets:total_reps):\t\t " << totalRadiusPackets << "::" << total_reps << ":: \t" <<total_packets/total_reps<<"\n";
+    std::cout << "(total_time_in_ms/durations.size()):\t " << total_time_in_ms << "/ " << durations.size() << ": \t" << (total_time_in_ms/durations.size())<<"\n";
+    std::cout << "Other Packets:\t\t\t\t" << not_radius << "\n";
+    std::cout << "Total Packets:\t\t\t\t" << count << "\n";
+    std::cout << "Average Total Time(ms): \t\t" << total_time_in_ms/durations.size() << "\n";
+    std::cout << "Average Time/Packet(ms): \t\t" <<(double)((double)(total_time_in_ms/durations.size())/count)<< "\n";
+
     
   }
 }
