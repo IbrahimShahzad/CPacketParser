@@ -2,7 +2,7 @@
 A PacketParser based on PcapPlusPlus
 Parses radius packets and outputs some information regarding each layer.
 
-main.cpp no longer in use. User parser.cpp. Make is updated accordingly.
+main.cpp no longer in use. User parser.cpp. Makefile is updated accordingly.
 
 usage: ./parser <input> <packets> <repetitions>
   <input>       Either a pcap file or type N to listen via interface
