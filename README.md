@@ -1,5 +1,5 @@
 # CPacketParser
-A PacketParser based on PcapPlusPlus
+A radius PacketParser based on PcapPlusPlus
 Parses radius packets and outputs some information regarding each layer.
 
 main.cpp no longer in use. User parser.cpp. Makefile is updated accordingly.
