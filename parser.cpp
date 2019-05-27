@@ -22,7 +22,7 @@ size_t not_radius = 0;        //not radius packets
 
 //Usage Help
 void printHelp(char* argv[]){
-  std::cout<<"\tusage: "<<*argv<<"<input> <packets> <repetitions>\n";
+  std::cout<<"\tusage: "<<*argv<<" <input> <packets> <repetitions>\n";
   std::cout<<"\t<input>      \tEither a pcap file or type N to listen via interface\n";
   std::cout<<"\t<packet>     \tEnter packet type. (radius, dns, udp etc)\n";
   std::cout<<"\t<repetitions>\tEnter number of times the program needs to run. (Benchmarking)\n";
@@ -192,57 +192,77 @@ void DisplayPacketInfo(){
 
 int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   pcpp::RadiusAttribute radiusAttribute = radiusLayer->getAttribute(code);
-
+  std::cout<< "code:  " << code<< "\n";
    if(radiusAttribute.isNull()){
+     std::cout<<"isnull\n";
     return 0;
   }
 
   switch(code){
     case 40:
       //Account Status
+      std::cout << "Acct Stat--- " << code << "\n";
       Rpack.attr_accStatusType.type = radiusAttribute.getType();
       Rpack.attr_accStatusType.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_accStatusType.totalSize = radiusAttribute.getTotalSize();
       strncpy(Rpack.attr_accStatusType.value,(char*)radiusAttribute.getValue(),1);
+      std::cout << "Rpack   " << Rpack.attr_accStatusType.value << "\n";
+      std::cout << "radius  " << radiusAttribute.getValue() << "\n";
       break;
-/*      
+      
     case 8:
       //Framed IP
+      std::cout << "Framed IP--- " << code << "\n";
       Rpack.attr_framedIpv4.type = radiusAttribute.getType();
       Rpack.attr_framedIpv4.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_framedIpv4.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
+//      Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
+      strncpy(Rpack.attr_framedIpv4.value,(char*)radiusAttribute.getValue(),16);
+      std::cout << "Rpack   " << Rpack.attr_framedIpv4.value << "\n";
+      std::cout << "radius  " << radiusAttribute.getValue() << "\n";
       break;
+
 
     case 9:
       //Framed Netmask
+      std::cout << "Framed Net--- " << code << "\n";
       Rpack.attr_framedIpv4Netmask.type = radiusAttribute.getType();
       Rpack.attr_framedIpv4Netmask.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_framedIpv4Netmask.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_framedIpv4Netmask.value.assign(radiusAttribute.getValue());
+//      Rpack.attr_framedIpv4Netmask.value.assign(radiusAttribute.getValue());
+      strncpy(Rpack.attr_framedIpv4Netmask.value,(char*)radiusAttribute.getValue(),16);
+      std::cout << "Rpack   " << Rpack.attr_framedIpv4Netmask.value << "\n";
+      std::cout << "radius  " << radiusAttribute.getValue() << "\n";
       break;
 
+/*
     case 19:
       //CallBack number
       Rpack.attr_callBackNumber.type = radiusAttribute.getType();
       Rpack.attr_callBackNumber.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_callBackNumber.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_callBackNumber.value.assign(radiusAttribute.getValue());
+//      Rpack.attr_callBackNumber.value.assign(radiusAttribute.getValue());
+      strcpy(Rpack.attr_callBackNumber.value,(char*)radiusAttribute.getValue());
       break;
-
+*/
+/*
     case 20:
       //callBack code
-      Rpack.attr_callBaclId.type = radiusAttribute.getType();
-      Rpack.attr_callBaclId.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_callBaclId.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_callBaclId.value.assign(radiusAttribute.getValue()); 
+      Rpack.attr_callBackId.type = radiusAttribute.getType();
+      Rpack.attr_callBackId.dataSize = radiusAttribute.getDataSize();
+      Rpack.attr_callBackId.totalSize = radiusAttribute.getTotalSize();
+//      Rpack.attr_callBaclId.value.assign(radiusAttribute.getValue()); 
+      strcpy(Rpack.attr_callBackId.value,(char*)radiusAttribute.getValue());
       break;
 */
     case 31:
+      std::cout << "CallSt # ---- "<< code <<"\n";
       Rpack.attr_callingStationId.type = radiusAttribute.getType();
       Rpack.attr_callingStationId.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_callingStationId.totalSize = radiusAttribute.getTotalSize();
-      strncpy(Rpack.attr_callingStationId.value,(char*)radiusAttribute.getValue(),13);
+      strncpy(Rpack.attr_callingStationId.value,(char*)radiusAttribute.getValue(),12);
+      std::cout << "Rpack   " << Rpack.attr_callingStationId.value << "\n";
+      std::cout << "radius  " << radiusAttribute.getValue() << "\n";
       break;
 
      default:
@@ -302,18 +322,18 @@ int handle_radius(pcpp::Packet& packet){
     std::cout<<"Couldn't read radius Layer\n";
     return 1;
   }
-  
+  std::cout << "\n\n RadiusLayer: \n" << radiusLayer->getRadiusHeader() << "\n";
   Rpack.rad_attrcount = radiusLayer->getAttributeCount();
   Rpack.rad_msgID = radiusLayer->getRadiusHeader()->id;
   Rpack.rad_code = radiusLayer->getRadiusHeader()->code;
   
   pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
-
+  std::cout << "Special Request --=====> " << radiusLayer->getAttribute(40).getValue()<<"\n";
   GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
   GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4Netmask.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_callBackNumber.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_callBackId.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4Netmask.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_callBackNumber.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_callBackId.code);
   GetRadiusAttribute(radiusLayer,Rpack.attr_callingStationId.code);
 
   return 1; 
@@ -389,18 +409,13 @@ int main(int argc, char* argv[]){
       durations.push_back( end-start );
       total_packets += count;
       reader->close();
-    
-
     }
-    
-    
   } 
     auto total_time = std::accumulate(
         durations.begin(),
         durations.end(),
         std::chrono::high_resolution_clock::duration(0)
         );
-
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     auto total_time_in_ms = duration_cast<milliseconds>(total_time).count();
@@ -410,7 +425,4 @@ int main(int argc, char* argv[]){
     std::cout << "Total Packets:\t\t\t\t" << count << "\n";
     std::cout << "Average Total Time(ms): \t\t" << total_time_in_ms/durations.size() << "\n";
     std::cout << "Average Time/Packet(ms): \t\t" <<(double)((double)(total_time_in_ms/durations.size())/count)<< "\n";
-
-    
-  
 }
