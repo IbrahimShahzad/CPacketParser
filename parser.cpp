@@ -40,47 +40,20 @@ struct Radius_Attribute{
 };
 
 struct PacketInfo{
-  //IPV4
-  //src ip
-  //dst ip
-  char ipv4_src[16];
-  char ipv4_dst[16];
-  //Ethernet
-  //src mac
-  //dst mac
-  char mac_src[20];
-  char mac_dst[20];
-  //src port
-  //dst port
-  int port_src;
-  int port_dst;
+  //char ipv4_src[16];
+  //char ipv4_dst[16];
+  //char mac_src[20];
+  //char mac_dst[20];
+  //int port_src;
+  //int port_dst;
   //Radius----------
-  //rad_attr_count
-  //rad_Code
-  //rad_MessageID
   int rad_attrcount;
   int rad_code;
   int rad_msgID;
   //code message string
   //Attributes-------
-  //msisdn
-  //FramedIP
-  // Framed-IP-Address (8)
   Radius_Attribute attr_framedIpv4;
-  Radius_Attribute attr_framedIpv4Netmask;
-  // Data Type: ipv4addr
-  // Framed-IP-Netmask (9)
-  // Data Type: ipv4addr
-  // Callback-Number (19)
-  Radius_Attribute attr_callBackNumber;
-  // Data Type: text
-  // Callback-ID (20)
-  Radius_Attribute attr_callBackId;
-  // Data Type: text
-  // Acct-Status-Type(40)
   Radius_Attribute attr_accStatusType;
-  // Data Type: enum
-  //Acct-Status
   Radius_Attribute attr_callingStationId;
 };
 
@@ -89,12 +62,12 @@ PacketInfo Rpack;
 
 //initialize all values
 void initialize_PacketInfo(){
-  strcpy(Rpack.ipv4_src," ");
-  strcpy(Rpack.ipv4_dst," ");
-  strcpy(Rpack.mac_src," ");
-  strcpy(Rpack.mac_dst," ");
-  Rpack.port_src = 0;
-  Rpack.port_dst = 0;
+  //strcpy(Rpack.ipv4_src," ");
+  //strcpy(Rpack.ipv4_dst," ");
+  //strcpy(Rpack.mac_src," ");
+  //strcpy(Rpack.mac_dst," ");
+  //Rpack.port_src = 0;
+  //Rpack.port_dst = 0;
   Rpack.rad_attrcount = 0;
   Rpack.rad_code = 0;
   Rpack.rad_msgID = 0;
@@ -111,24 +84,6 @@ void initialize_PacketInfo(){
   Rpack.attr_framedIpv4.dataSize = -1;
   Rpack.attr_framedIpv4.totalSize = -1;
 
-  Rpack.attr_framedIpv4Netmask.code = 9;
-  strcpy(Rpack.attr_framedIpv4Netmask.value," ");
-  Rpack.attr_framedIpv4Netmask.type = -1;
-  Rpack.attr_framedIpv4Netmask.dataSize = -1;
-  Rpack.attr_framedIpv4Netmask.totalSize = -1;
-
-  Rpack.attr_callBackNumber.code = 19;
-  strcpy(Rpack.attr_callBackNumber.value," ");
-  Rpack.attr_callBackNumber.type = -1;
-  Rpack.attr_callBackNumber.dataSize = -1;
-  Rpack.attr_callBackNumber.totalSize = -1;
-
-  Rpack.attr_callBackId.code = 20;
-  strcpy(Rpack.attr_callBackId.value," ");
-  Rpack.attr_callBackId.type = -1;
-  Rpack.attr_callBackId.dataSize = -1;
-  Rpack.attr_callBackId.totalSize = -1;
-
   Rpack.attr_callingStationId.code = 31;
   strcpy(Rpack.attr_callingStationId.value," ");
   Rpack.attr_callingStationId.type = -1;
@@ -138,9 +93,9 @@ void initialize_PacketInfo(){
 
 void DisplayPacketInfo(){
   std::cout << "\n";
-  std::cout << "Ipv4_Src : Ipv4_Dst :: " << Rpack.ipv4_src << " : " << Rpack.ipv4_dst << "\n";
-  std::cout << "MAC_Src  : MAC_Dst  :: " << Rpack.mac_src  << " : " << Rpack.mac_dst  << "\n";
-  std::cout << "Port_Src : Port_Dst :: " << Rpack.port_src << " : " << Rpack.port_dst << "\n";
+  //std::cout << "Ipv4_Src : Ipv4_Dst :: " << Rpack.ipv4_src << " : " << Rpack.ipv4_dst << "\n";
+  //std::cout << "MAC_Src  : MAC_Dst  :: " << Rpack.mac_src  << " : " << Rpack.mac_dst  << "\n";
+  //std::cout << "Port_Src : Port_Dst :: " << Rpack.port_src << " : " << Rpack.port_dst << "\n";
   std::cout << "Radius Attribute Count: " << Rpack.rad_attrcount << "\n";
   std::cout << "Radius Code           : " << Rpack.rad_code << "\n";
   std::cout << "Radius Message ID     : " << Rpack.rad_msgID << "\n";
@@ -160,20 +115,6 @@ void DisplayPacketInfo(){
   std::cout << "\t\t\t TotalSize: " << Rpack.attr_callingStationId.totalSize << "\n";
   std::cout << "\t\t\t Value:     " << Rpack.attr_callingStationId.value << "\n";
 
-  std::cout << "\tCallBack ID\n";
-  std::cout << "\t\t\t code:      " << Rpack.attr_callBackId.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_callBackId.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_callBackId.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_callBackId.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_callBackId.value << "\n";
-
-  std::cout << "\tCallBack Number\n";
-  std::cout << "\t\t\t code:      " << Rpack.attr_callBackNumber.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_callBackNumber.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_callBackNumber.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_callBackNumber.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_callBackNumber.value << "\n";
-
   std::cout << "\tFramed IPv4\n"; 
   std::cout << "\t\t\t code:      " << Rpack.attr_framedIpv4.code << "\n";
   std::cout << "\t\t\t Type:      " << Rpack.attr_framedIpv4.type << "\n";
@@ -181,14 +122,8 @@ void DisplayPacketInfo(){
   std::cout << "\t\t\t TotalSize: " << Rpack.attr_framedIpv4.totalSize << "\n";
   std::cout << "\t\t\t Value:     " << Rpack.attr_framedIpv4.value << "\n";
 
-  std::cout << "\tFramed IPv4 Netmask\n"; 
-  std::cout << "\t\t\t code:      " << Rpack.attr_framedIpv4Netmask.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_framedIpv4Netmask.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_framedIpv4Netmask.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_framedIpv4Netmask.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_framedIpv4Netmask.value << "\n";
-
 }
+
 
 int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   pcpp::RadiusAttribute radiusAttribute = radiusLayer->getAttribute(code);
@@ -251,7 +186,8 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   return 1;
 }
  
-
+//Not Used... Make sure to change PacketIfo if used
+/*
 int extract_ethernetLayerData(pcpp::EthLayer* ethernetLayer){
   //get ethernetProps
   if(ethernetLayer == NULL){
@@ -261,7 +197,9 @@ int extract_ethernetLayerData(pcpp::EthLayer* ethernetLayer){
   strcpy(Rpack.mac_src,(char*)ethernetLayer->getDestMac().toString().c_str());
   return 1;
 }
-
+*/
+//Not Used... Make sure to change PacketIfo if used
+/*
 int extract_ipv4LayerData(pcpp::IPv4Layer* ipv4Layer){
   //get IP Props
   if(ipv4Layer == NULL){
@@ -271,7 +209,9 @@ int extract_ipv4LayerData(pcpp::IPv4Layer* ipv4Layer){
   strcpy(Rpack.ipv4_dst,(char*)ipv4Layer->getDstIpAddress().toString().c_str());
   return 1;
 }
-
+*/
+//Not Used... Make sure to change PacketIfo if used
+/*
 int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
   if(udpLayer == NULL){
     return 0;
@@ -280,6 +220,8 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
   Rpack.port_dst = (int)ntohs(udpLayer->getUdpHeader()->portDst);
   return 1;
 }
+*/
+
 
 //Handle Radius Packet
 int handle_radius(pcpp::Packet& packet){
@@ -291,9 +233,9 @@ int handle_radius(pcpp::Packet& packet){
     return 1;
   }
 
-  extract_ethernetLayerData(packet.getLayerOfType<pcpp::EthLayer>());
-  extract_ipv4LayerData(packet.getLayerOfType<pcpp::IPv4Layer>());
-  extract_udpLayerData(packet.getLayerOfType<pcpp::UdpLayer>());
+  //extract_ethernetLayerData(packet.getLayerOfType<pcpp::EthLayer>());
+  //extract_ipv4LayerData(packet.getLayerOfType<pcpp::IPv4Layer>());
+  //extract_udpLayerData(packet.getLayerOfType<pcpp::UdpLayer>());
 
   pcpp::RadiusLayer* radiusLayer = packet.getLayerOfType<pcpp::RadiusLayer>();
   totalRadiusPackets++;
@@ -311,9 +253,6 @@ int handle_radius(pcpp::Packet& packet){
 
   GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
   GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4Netmask.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_callBackNumber.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_callBackId.code);
   GetRadiusAttribute(radiusLayer,Rpack.attr_callingStationId.code);
 
   return 1; 
@@ -372,11 +311,12 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<2){
+        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<99999){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
-          DisplayPacketInfo();
+
+          //DisplayPacketInfo();
         }
       }else{
           std::cout << "Not yet\n";
