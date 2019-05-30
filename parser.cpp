@@ -31,6 +31,13 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
+int Rad_Acct_Stat = 0;
+// Framed IP set
+unsigned int IPv4_1 = 0;
+unsigned int IPv4_2 = 0;
+unsigned int IPv4_3 = 0;
+unsigned int IPv4_4 = 0;
+
 struct Radius_Attribute{
   int code;
   int type;
@@ -123,8 +130,9 @@ void DisplayPacketInfo(){
   std::cout << "\t\t\t Value:     " << Rpack.attr_framedIpv4.value << "\n";
 
 }
-
-
+// ----------------------------------------------------------------------------------
+// Does not retrun proper attribute values when non ASCII values read (CAUTION!)
+// ---------------------------------------------------------------------------------
 int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   pcpp::RadiusAttribute radiusAttribute = radiusLayer->getAttribute(code);
 
@@ -140,7 +148,6 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
       Rpack.attr_accStatusType.totalSize = radiusAttribute.getTotalSize();
       strncpy(Rpack.attr_accStatusType.value,(char*)radiusAttribute.getValue(),1);
       break;
-/*      
     case 8:
       //Framed IP
       Rpack.attr_framedIpv4.type = radiusAttribute.getType();
@@ -149,31 +156,8 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
       Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
       break;
 
-    case 9:
-      //Framed Netmask
-      Rpack.attr_framedIpv4Netmask.type = radiusAttribute.getType();
-      Rpack.attr_framedIpv4Netmask.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_framedIpv4Netmask.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_framedIpv4Netmask.value.assign(radiusAttribute.getValue());
-      break;
-
-    case 19:
-      //CallBack number
-      Rpack.attr_callBackNumber.type = radiusAttribute.getType();
-      Rpack.attr_callBackNumber.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_callBackNumber.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_callBackNumber.value.assign(radiusAttribute.getValue());
-      break;
-
-    case 20:
-      //callBack code
-      Rpack.attr_callBaclId.type = radiusAttribute.getType();
-      Rpack.attr_callBaclId.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_callBaclId.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_callBaclId.value.assign(radiusAttribute.getValue()); 
-      break;
-*/
     case 31:
+      // MSISDN
       Rpack.attr_callingStationId.type = radiusAttribute.getType();
       Rpack.attr_callingStationId.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_callingStationId.totalSize = radiusAttribute.getTotalSize();
@@ -185,7 +169,8 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   } 
   return 1;
 }
- 
+// ---------------------------------------------------------------------------------
+// -----------------------------------ETH-LAYER------------------------------------
 //Not Used... Make sure to change PacketIfo if used
 /*
 int extract_ethernetLayerData(pcpp::EthLayer* ethernetLayer){
@@ -198,6 +183,9 @@ int extract_ethernetLayerData(pcpp::EthLayer* ethernetLayer){
   return 1;
 }
 */
+
+// -----------------------------------IPv4-LAYER----------------------------------------
+
 //Not Used... Make sure to change PacketIfo if used
 /*
 int extract_ipv4LayerData(pcpp::IPv4Layer* ipv4Layer){
@@ -210,6 +198,9 @@ int extract_ipv4LayerData(pcpp::IPv4Layer* ipv4Layer){
   return 1;
 }
 */
+
+// -----------------------------------UDP-LAYER------------------------------------------
+
 //Not Used... Make sure to change PacketIfo if used
 /*
 int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
@@ -222,6 +213,50 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
 }
 */
 
+// ---------------------------------RADIUS-------------------------------------------------
+// Reads Attributes byte by byte
+// for example: --- 28 06 00 00 00 02 --- 
+// 28 = dec(28) = 40 (Acct-Status-Type)
+// 06 = total length
+// 00 00 00 02 = value =  2 (stop)
+// bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4
+// In case of adding new attribute
+// Please refer to proper documentation to get these values.
+int readAttributebyBytes(uint8_t* pointer, int length){
+  counter = 0;
+  while(counter < length -1){
+    int code = *(pointer+counter);
+    int length = *(pointer+counter+1);
+    switch(code){
+      case Rpack.attr_accStatusType.code:
+        std::cout << "Att code: " << code << " ";
+        std::cout << "length:   " << length << " ";
+        Rad_Acct_Stat = *(pointer+counter+5) 
+        std::cout << "val:   " << Rad_Acct_Stat << "\n";
+        break;
+      case Rpack.attr_framedIpv4.code:
+        std::cout << "Fr code: " << code << " ";
+        std::cout << "Fr len:  " << code << " ";
+        IPv4_1 = *(pointer + counter + 2);
+        IPv4_2 = *(pointer + counter + 3);
+        IPv4_3 = *(pointer + counter + 4);
+        IPv4_4 = *(pointer + counter + 5);
+        std::cout << "Fr IP:   " << IPv4_1 << "." << IPv4_2 << "." << IPv4_3 << "." <<IPv4_4 << "\n";
+        break;
+      case Rpack.attr_callingStationId.code:
+        std::cout << "Call code: " << code << " ";
+        std::cout << "Call Leng: " << length << " ";
+        std::cout << "\n";
+        break;
+      case 97:
+        std::cout<< "THIS IS IPV6\n";
+        break;
+      default:
+        break;
+    } 
+    counter = counter + length;
+  }
+}
 
 //Handle Radius Packet
 int handle_radius(pcpp::Packet& packet){
@@ -248,12 +283,15 @@ int handle_radius(pcpp::Packet& packet){
   Rpack.rad_attrcount = radiusLayer->getAttributeCount();
   Rpack.rad_msgID = radiusLayer->getRadiusHeader()->id;
   Rpack.rad_code = radiusLayer->getRadiusHeader()->code;
-  
-  pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
+  int packet_length = radiusLayer->getRadiusHeader()->length;
+  std::cout << "Radius Header Length: " << packet_length << "\n";
+  uint8_t* rawData;
+  radiusLayer->copyData(rawData);
+  //pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
 
-  GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4.code);
-  GetRadiusAttribute(radiusLayer,Rpack.attr_callingStationId.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4.code);
+  //GetRadiusAttribute(radiusLayer,Rpack.attr_callingStationId.code);
 
   return 1; 
 }
