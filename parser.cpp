@@ -16,6 +16,14 @@
 #include <vector>
 #include <numeric>
 
+#define RADIUS_LENGTH_ID 2
+#define RADIUS_IDENTIFIER_LENGTH 1
+#define RADIUS_AUTHENTICATOR_LENGTH 16
+#define ACCOUNT_STATUS_TYPE 40
+#define FRAMED_IPV4 8
+#define CALLING_STATION_ID 31
+#define MAX_RADIUS_PACKET_LENGTH 4096
+
 size_t count = 0;             //total packet count
 size_t totalRadiusPackets = 0;//total radius pacekets
 size_t not_radius = 0;        //not radius packets
@@ -79,19 +87,19 @@ void initialize_PacketInfo(){
   Rpack.rad_code = 0;
   Rpack.rad_msgID = 0;
 
-  Rpack.attr_accStatusType.code = 40;
+  Rpack.attr_accStatusType.code = ACCOUNT_STATUS_TYPE;
   strcpy(Rpack.attr_accStatusType.value," ");
   Rpack.attr_accStatusType.type = -1;
   Rpack.attr_accStatusType.dataSize = -1;
   Rpack.attr_accStatusType.totalSize = -1;
 
-  Rpack.attr_framedIpv4.code = 8;
+  Rpack.attr_framedIpv4.code = FRAMED_IPV4;
   strcpy(Rpack.attr_framedIpv4.value," ");
   Rpack.attr_framedIpv4.type = -1;
   Rpack.attr_framedIpv4.dataSize = -1;
   Rpack.attr_framedIpv4.totalSize = -1;
 
-  Rpack.attr_callingStationId.code = 31;
+  Rpack.attr_callingStationId.code = CALLING_STATION_ID;
   strcpy(Rpack.attr_callingStationId.value," ");
   Rpack.attr_callingStationId.type = -1;
   Rpack.attr_callingStationId.dataSize = -1;
@@ -141,22 +149,22 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   }
 
   switch(code){
-    case 40:
+    case ACCOUNT_STATUS_TYPE:
       //Account Status
       Rpack.attr_accStatusType.type = radiusAttribute.getType();
       Rpack.attr_accStatusType.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_accStatusType.totalSize = radiusAttribute.getTotalSize();
       strncpy(Rpack.attr_accStatusType.value,(char*)radiusAttribute.getValue(),1);
       break;
-    case 8:
+    case FRAMED_IPV4:
       //Framed IP
       Rpack.attr_framedIpv4.type = radiusAttribute.getType();
       Rpack.attr_framedIpv4.dataSize = radiusAttribute.getDataSize();
       Rpack.attr_framedIpv4.totalSize = radiusAttribute.getTotalSize();
-      Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
+      //Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
       break;
 
-    case 31:
+    case CALLING_STATION_ID:
       // MSISDN
       Rpack.attr_callingStationId.type = radiusAttribute.getType();
       Rpack.attr_callingStationId.dataSize = radiusAttribute.getDataSize();
@@ -222,39 +230,67 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
 // bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4
 // In case of adding new attribute
 // Please refer to proper documentation to get these values.
-int readAttributebyBytes(uint8_t* pointer, int length){
-  counter = 0;
+int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
+  unsigned int length = radiusLayer->getHeaderLen();
+  uint8_t bArray[MAX_RADIUS_PACKET_LENGTH];
+  radiusLayer->copyData(bArray);
+  int skip = RADIUS_AUTHENTICATOR_LENGTH + RADIUS_LENGTH_ID + RADIUS_IDENTIFIER_LENGTH +1;
+  int counter = skip;
+  std::cout<< "skip "<< skip << "\n";
   while(counter < length -1){
-    int code = *(pointer+counter);
-    int length = *(pointer+counter+1);
+
+    int code = bArray[counter];
+    int length = bArray[counter+1];
+    std::cout << "for code: " <<  code;
+    std::cout << " counter: " << counter;
     switch(code){
-      case Rpack.attr_accStatusType.code:
+
+      case ACCOUNT_STATUS_TYPE:
         std::cout << "Att code: " << code << " ";
         std::cout << "length:   " << length << " ";
-        Rad_Acct_Stat = *(pointer+counter+5) 
+        Rad_Acct_Stat = bArray[counter+5]; 
         std::cout << "val:   " << Rad_Acct_Stat << "\n";
         break;
-      case Rpack.attr_framedIpv4.code:
+
+      case FRAMED_IPV4:
         std::cout << "Fr code: " << code << " ";
         std::cout << "Fr len:  " << code << " ";
-        IPv4_1 = *(pointer + counter + 2);
-        IPv4_2 = *(pointer + counter + 3);
-        IPv4_3 = *(pointer + counter + 4);
-        IPv4_4 = *(pointer + counter + 5);
+        IPv4_1 = bArray[counter + 2];
+        IPv4_2 = bArray[counter + 3];
+        IPv4_3 = bArray[counter + 4];
+        IPv4_4 = bArray[counter + 5];
         std::cout << "Fr IP:   " << IPv4_1 << "." << IPv4_2 << "." << IPv4_3 << "." <<IPv4_4 << "\n";
         break;
-      case Rpack.attr_callingStationId.code:
+
+      case CALLING_STATION_ID:
         std::cout << "Call code: " << code << " ";
         std::cout << "Call Leng: " << length << " ";
         std::cout << "\n";
         break;
+
       case 97:
         std::cout<< "THIS IS IPV6\n";
         break;
+
       default:
+        std::cout << " DEF ";
         break;
     } 
+    std::cout << "\n";
+    if (length == 0){
+      counter = counter + 1;
+    }
     counter = counter + length;
+    
+  }
+
+  counter = skip; 
+  while(counter < length ){
+    unsigned int i= bArray[counter];
+    std::cout << "bArray[ " << counter << "]" ;
+    std::cout <<  bArray[counter] << " ";
+    std::cout << " val2 " << i << "\n";
+    counter++;
   }
 }
 
@@ -283,10 +319,8 @@ int handle_radius(pcpp::Packet& packet){
   Rpack.rad_attrcount = radiusLayer->getAttributeCount();
   Rpack.rad_msgID = radiusLayer->getRadiusHeader()->id;
   Rpack.rad_code = radiusLayer->getRadiusHeader()->code;
-  int packet_length = radiusLayer->getRadiusHeader()->length;
-  std::cout << "Radius Header Length: " << packet_length << "\n";
-  uint8_t* rawData;
-  radiusLayer->copyData(rawData);
+  //readAttributebyBytes(rawData,packet_length);
+  readAttributebyBytes(radiusLayer);
   //pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
 
   //GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
@@ -349,7 +383,7 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<99999){
+        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<1){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
