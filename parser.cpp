@@ -39,12 +39,14 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
-int Rad_Acct_Stat = 0;
+uint8_t  Rad_Acct_Stat = 0;
 // Framed IP set
-unsigned int IPv4_1 = 0;
-unsigned int IPv4_2 = 0;
-unsigned int IPv4_3 = 0;
-unsigned int IPv4_4 = 0;
+uint8_t FrIp4[4];
+//unsigned int IPv4_1 = 0;
+//unsigned int IPv4_2 = 0;
+//unsigned int IPv4_3 = 0;
+//unsigned int IPv4_4 = 0;
+uint64_t number;
 
 struct Radius_Attribute{
   int code;
@@ -106,11 +108,18 @@ void initialize_PacketInfo(){
   Rpack.attr_callingStationId.totalSize = -1;
 }
 
+void DisplayAttributes(){
+  std::cout << "\n";
+  std::cout << std::dec << "ACCOUNT_STATUS_TYPE: " << Rad_Acct_Stat << "\n";
+  std::cout << std::dec << "FRAMED_IPV4: " << FrIp4[0] << "." 
+    << FrIp4[1] << "." 
+    << FrIp4[2] << "." 
+    << FrIp4[3] << "." << "\n"; 
+  std::cout<< std::dec << "CALLING_STATION_ID: " << number << "\n\n";
+}
+
 void DisplayPacketInfo(){
   std::cout << "\n";
-  //std::cout << "Ipv4_Src : Ipv4_Dst :: " << Rpack.ipv4_src << " : " << Rpack.ipv4_dst << "\n";
-  //std::cout << "MAC_Src  : MAC_Dst  :: " << Rpack.mac_src  << " : " << Rpack.mac_dst  << "\n";
-  //std::cout << "Port_Src : Port_Dst :: " << Rpack.port_src << " : " << Rpack.port_dst << "\n";
   std::cout << "Radius Attribute Count: " << Rpack.rad_attrcount << "\n";
   std::cout << "Radius Code           : " << Rpack.rad_code << "\n";
   std::cout << "Radius Message ID     : " << Rpack.rad_msgID << "\n";
@@ -177,6 +186,7 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   } 
   return 1;
 }
+
 // ---------------------------------------------------------------------------------
 // -----------------------------------ETH-LAYER------------------------------------
 //Not Used... Make sure to change PacketIfo if used
@@ -230,7 +240,6 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
 // bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4
 // In case of adding new attribute
 // Please refer to proper documentation to get these values.
-unsigned long number;
 int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
   int sum_check = 0;
   unsigned int length = radiusLayer->getHeaderLen();
@@ -238,7 +247,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
   radiusLayer->copyData(bArray);
   int skip = RADIUS_AUTHENTICATOR_LENGTH + RADIUS_LENGTH_ID + RADIUS_IDENTIFIER_LENGTH +1;
   int counter = skip;
-  std::cout<< "skip "<< skip << "\n";
+  //std::cout<< "skip "<< skip << "\n";
   while(counter < length -1){
     if(sum_check == 3){
       break;
@@ -254,7 +263,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
       case ACCOUNT_STATUS_TYPE:
         std::cout << "\n\tAtt code: " << code << " ";
         std::cout << "\n\tlength  : " << length << " ";
-        Rad_Acct_Stat = bArray[counter+5]; 
+        Rad_Acct_Stat = (int)bArray[counter+5]; 
         std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
         sum_check++;
         break;
@@ -262,12 +271,16 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
       case FRAMED_IPV4:
         std::cout << "\n\tFr code: " << code << " ";
         std::cout << "\n\tFr len :  " << length << " ";
-
-        IPv4_1 = bArray[counter + 2];
-        IPv4_2 = bArray[counter + 3];
-        IPv4_3 = bArray[counter + 4];
-        IPv4_4 = bArray[counter + 5];
-        std::cout << "\n\tFr IP:   " << IPv4_1 << "." << IPv4_2 << "." << IPv4_3 << "." <<IPv4_4 << "\n";
+        //*FrIp4 = bArray[counter + 2];
+        //*(FrIp4+1) = bArray[counter + 2];
+        //*(FrIp4+2) = bArray[counter + 2];
+        //*(FrIp4+3) = bArray[counter + 2];
+        FrIp4[0] = bArray[counter + 2];
+        FrIp4[1] = bArray[counter + 3];
+        FrIp4[2] = bArray[counter + 4];
+        FrIp4[3] = bArray[counter + 5];
+        
+        std::cout << "\n\tFr IP:   " << FrIp4[0] << "." << FrIp4[1] << "." << FrIp4[2] << "." << FrIp4[3] << "\n";
         sum_check++;
         break;
 
@@ -407,8 +420,7 @@ int main(int argc, char* argv[]){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
-
-          //DisplayPacketInfo();
+          DisplayAttributes();
         }
       }else{
           std::cout << "Not yet\n";
