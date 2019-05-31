@@ -39,14 +39,17 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
-uint8_t  Rad_Acct_Stat = 0;
+//uint8_t  Rad_Acct_Stat = 0;
+int  Rad_Acct_Stat = 0;
 // Framed IP set
-uint8_t FrIp4[4];
+//uint8_t FrIp4[4];
+int  FrIp4[4];
 //unsigned int IPv4_1 = 0;
 //unsigned int IPv4_2 = 0;
 //unsigned int IPv4_3 = 0;
 //unsigned int IPv4_4 = 0;
-uint64_t number;
+//uint64_t number;
+unsigned long number;
 
 struct Radius_Attribute{
   int code;
@@ -114,7 +117,7 @@ void DisplayAttributes(){
   std::cout << std::dec << "FRAMED_IPV4: " << FrIp4[0] << "." 
     << FrIp4[1] << "." 
     << FrIp4[2] << "." 
-    << FrIp4[3] << "." << "\n"; 
+    << FrIp4[3] << "\n"; 
   std::cout<< std::dec << "CALLING_STATION_ID: " << number << "\n\n";
 }
 
@@ -254,39 +257,35 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
     }
     int code = bArray[counter];
     int length = bArray[counter+1];
-    std::cout << " for code: " <<  code;
-    std::cout << " counter: " << counter;
-    std::cout << " sum= " << sum_check;
+    //std::cout << " for code: " <<  code;
+    //std::cout << " counter: " << counter;
+    //std::cout << " sum= " << sum_check;
     unsigned long multiplier = 1;
     switch(code){
 
       case ACCOUNT_STATUS_TYPE:
-        std::cout << "\n\tAtt code: " << code << " ";
-        std::cout << "\n\tlength  : " << length << " ";
+        //std::cout << "\n\tAtt code: " << code << " ";
+        //std::cout << "\n\tlength  : " << length << " ";
         Rad_Acct_Stat = (int)bArray[counter+5]; 
-        std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
+        //std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
         sum_check++;
         break;
 
       case FRAMED_IPV4:
-        std::cout << "\n\tFr code: " << code << " ";
-        std::cout << "\n\tFr len :  " << length << " ";
-        //*FrIp4 = bArray[counter + 2];
-        //*(FrIp4+1) = bArray[counter + 2];
-        //*(FrIp4+2) = bArray[counter + 2];
-        //*(FrIp4+3) = bArray[counter + 2];
+        //std::cout << "\n\tFr code: " << code << " ";
+        //std::cout << "\n\tFr len :  " << length << " ";
         FrIp4[0] = bArray[counter + 2];
         FrIp4[1] = bArray[counter + 3];
         FrIp4[2] = bArray[counter + 4];
         FrIp4[3] = bArray[counter + 5];
         
-        std::cout << "\n\tFr IP:   " << FrIp4[0] << "." << FrIp4[1] << "." << FrIp4[2] << "." << FrIp4[3] << "\n";
+        //std::cout << "\n\tFr IP:   " << FrIp4[0] << "." << FrIp4[1] << "." << FrIp4[2] << "." << FrIp4[3] << "\n";
         sum_check++;
         break;
 
       case CALLING_STATION_ID:
-        std::cout << "\n\tCall code: " << code << " ";
-        std::cout << "\n\tCall Leng: " << length << " ";
+        //std::cout << "\n\tCall code: " << code << " ";
+        //std::cout << "\n\tCall Leng: " << length << " ";
         multiplier = 1;
         number = 0;
         for(int i=length-1; i>1; i--){
@@ -295,8 +294,8 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
           number = number + temp;
           multiplier = multiplier * 10;
         }
-        std::cout << "\n\tnumber   : " << number << " ";
-        std::cout << "\n";
+        //std::cout << "\n\tnumber   : " << number << " ";
+        //std::cout << "\n";
         sum_check++;
         break;
 
@@ -305,10 +304,10 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
         break;
 
       default:
-        std::cout << " DEF ";
+        //std::cout << " DEF ";
         break;
     } 
-    std::cout << "\n";
+    //std::cout << "\n";
     if (length == 0){
       counter = counter + 1;
     }
@@ -416,7 +415,7 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<1){
+        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<10){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
