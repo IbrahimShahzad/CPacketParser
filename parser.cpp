@@ -300,7 +300,8 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
         break;
 
       case 97:
-        std::cout<< "THIS IS IPV6\n";
+        //std::cout<< "THIS IS IPV6:";
+        //std::cout<< count << "\n"; 
         break;
 
       default:
