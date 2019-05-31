@@ -252,7 +252,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
   int counter = skip;
   //std::cout<< "skip "<< skip << "\n";
   while(counter < length -1){
-    if(sum_check == 3){
+    if(sum_check == 4){
       break;
     }
     int code = bArray[counter];
