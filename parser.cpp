@@ -230,7 +230,9 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
 // bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4
 // In case of adding new attribute
 // Please refer to proper documentation to get these values.
+unsigned long number;
 int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
+  int sum_check = 0;
   unsigned int length = radiusLayer->getHeaderLen();
   uint8_t bArray[MAX_RADIUS_PACKET_LENGTH];
   radiusLayer->copyData(bArray);
@@ -238,34 +240,51 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
   int counter = skip;
   std::cout<< "skip "<< skip << "\n";
   while(counter < length -1){
-
+    if(sum_check == 3){
+      break;
+    }
     int code = bArray[counter];
     int length = bArray[counter+1];
-    std::cout << "for code: " <<  code;
+    std::cout << " for code: " <<  code;
     std::cout << " counter: " << counter;
+    std::cout << " sum= " << sum_check;
+    unsigned long multiplier = 1;
     switch(code){
 
       case ACCOUNT_STATUS_TYPE:
-        std::cout << "Att code: " << code << " ";
-        std::cout << "length:   " << length << " ";
+        std::cout << "\n\tAtt code: " << code << " ";
+        std::cout << "\n\tlength  : " << length << " ";
         Rad_Acct_Stat = bArray[counter+5]; 
-        std::cout << "val:   " << Rad_Acct_Stat << "\n";
+        std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
+        sum_check++;
         break;
 
       case FRAMED_IPV4:
-        std::cout << "Fr code: " << code << " ";
-        std::cout << "Fr len:  " << code << " ";
+        std::cout << "\n\tFr code: " << code << " ";
+        std::cout << "\n\tFr len :  " << length << " ";
+
         IPv4_1 = bArray[counter + 2];
         IPv4_2 = bArray[counter + 3];
         IPv4_3 = bArray[counter + 4];
         IPv4_4 = bArray[counter + 5];
-        std::cout << "Fr IP:   " << IPv4_1 << "." << IPv4_2 << "." << IPv4_3 << "." <<IPv4_4 << "\n";
+        std::cout << "\n\tFr IP:   " << IPv4_1 << "." << IPv4_2 << "." << IPv4_3 << "." <<IPv4_4 << "\n";
+        sum_check++;
         break;
 
       case CALLING_STATION_ID:
-        std::cout << "Call code: " << code << " ";
-        std::cout << "Call Leng: " << length << " ";
+        std::cout << "\n\tCall code: " << code << " ";
+        std::cout << "\n\tCall Leng: " << length << " ";
+        multiplier = 1;
+        number = 0;
+        for(int i=length-1; i>1; i--){
+          unsigned long temp;
+          temp = (bArray[counter + i] - 48)  * multiplier;
+          number = number + temp;
+          multiplier = multiplier * 10;
+        }
+        std::cout << "\n\tnumber   : " << number << " ";
         std::cout << "\n";
+        sum_check++;
         break;
 
       case 97:
@@ -283,7 +302,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
     counter = counter + length;
     
   }
-
+/*
   counter = skip; 
   while(counter < length ){
     unsigned int i= bArray[counter];
@@ -292,6 +311,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
     std::cout << " val2 " << i << "\n";
     counter++;
   }
+*/
 }
 
 //Handle Radius Packet
