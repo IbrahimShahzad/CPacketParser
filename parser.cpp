@@ -419,7 +419,7 @@ int main(int argc, char* argv[]){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
-          DisplayAttributes();
+        //  DisplayAttributes();
         }
       }else{
           std::cout << "Not yet\n";
