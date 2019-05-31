@@ -39,17 +39,17 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
-//uint8_t  Rad_Acct_Stat = 0;
-int  Rad_Acct_Stat = 0;
+uint8_t  Rad_Acct_Stat = 0;
+//int  Rad_Acct_Stat = 0;
 // Framed IP set
-//uint8_t FrIp4[4];
-int  FrIp4[4];
+uint8_t FrIp4[4];
+//int  FrIp4[4];
 //unsigned int IPv4_1 = 0;
 //unsigned int IPv4_2 = 0;
 //unsigned int IPv4_3 = 0;
 //unsigned int IPv4_4 = 0;
-//uint64_t number;
-unsigned long number;
+uint64_t number;
+//unsigned long number;
 
 struct Radius_Attribute{
   int code;
