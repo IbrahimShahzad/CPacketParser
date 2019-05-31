@@ -415,7 +415,7 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<10){
+        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<99999){
           pcpp::Packet packet(&raw_packet);
           initialize_PacketInfo();
           handle_radius(packet);
