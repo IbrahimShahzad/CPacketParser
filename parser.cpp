@@ -27,12 +27,14 @@
 #define MAX_RADIUS_PACKET_LENGTH 4096
 #define IPV6_PREFIX_HEAD_LENGTH 2
 
-size_t count = 0;             //total packet count
-size_t totalRadiusPackets = 0;//total radius pacekets
-size_t not_radius = 0;        //not radius packets
+size_t COUNT = 0;             //total packet COUNT
+size_t TOTAL_RADIUS_PACKETS = 0;//total radius pacekets
+size_t NOT_RADIUS = 0;        //not radius packets
 
-//Usage Help
 void printHelp(char* argv[]){
+  /*
+   * prints out usage help
+   */
   std::cout << "\n\n";
   std::cout << "\tusage: "<<*argv<<" <input> <packets> <repetitions>\n";
   std::cout << "\t<input>      \tEither a pcap file or type N to listen via interface\n";
@@ -44,16 +46,9 @@ void printHelp(char* argv[]){
   exit(1);
 }
 
-/*
-uint8_t  Rad_Acct_Stat = 0;
-uint8_t FrIp4[4];
-uint64_t number;
-uint8_t FrIp6[20];
-uint8_t FrIp6Length;
-uint8_t FrIp6Type;
-*/
-int ipv6_byte = 0;
 
+// For a uniform data type for all radius attributes
+// However length of value will need to be changed.
 struct Radius_Attribute{
   int code;
   int type;
@@ -63,14 +58,14 @@ struct Radius_Attribute{
 };
 
 struct PacketInfo{
-  //char ipv4_src[16];
-  //char ipv4_dst[16];
-  //char mac_src[20];
-  //char mac_dst[20];
-  //int port_src;
-  //int port_dst;
+  // Can be added.
+  // Src/Dest IP
+  // Src/Dest Mac
+  // Src/Dest Port
+  // Change the initializer respectively
+  
   //Radius----------
-  int rad_attrcount;
+  int rad_attrCOUNT;
   int rad_code;
   int rad_msgID;
   //code message string
@@ -85,66 +80,63 @@ struct PacketInfo{
 };
 
 // Global
-PacketInfo Rpack;
+PacketInfo R_PACK;
 
-//initialize all values
 void initialize_PacketInfo(){
-  //strcpy(Rpack.ipv4_src," ");
-  //strcpy(Rpack.ipv4_dst," ");
-  //strcpy(Rpack.mac_src," ");
-  //strcpy(Rpack.mac_dst," ");
-  //Rpack.port_src = 0;
-  //Rpack.port_dst = 0;
-  Rpack.rad_attrcount = 0;
-  Rpack.rad_code = 0;
-  Rpack.rad_msgID = 0;
+  /*
+   * Initialization of PacketInfo
+   * 
+   */
+  R_PACK.rad_attrCOUNT = 0;
+  R_PACK.rad_code = 0;
+  R_PACK.rad_msgID = 0;
   
   //Attributes
-  Rpack.Rad_Acct_Stat = 0;
-  Rpack.number = 0;
+  R_PACK.Rad_Acct_Stat = 0;
+  R_PACK.number = 0;
+
+  //FOR IPv4 and IPv6
   int temp1, temp2;
   temp1 = temp2 = 0;
   while (temp2 < 20){
-    Rpack.FrIp4[temp1]=0;
-    Rpack.FrIp6[temp2]=0;
+    R_PACK.FrIp4[temp1]=0;
+    R_PACK.FrIp6[temp2]=0;
     if(temp2%5==0){
       temp1++;
     }
     temp2++;
   }
-  Rpack.FrIp6Length = 0; //length of attribute in bytes
-  Rpack.FrIp6Type = 0; // 64
+  R_PACK.FrIp6Length = 0; //length of attribute in bytes
+  R_PACK.FrIp6Type = 0; // 64
 
 }
 
 void DisplayAttributes(){
   std::cout << "\n";
-  std::cout << std::dec << "ACCOUNT_STATUS_TYPE   : " << (int)Rpack.Rad_Acct_Stat << "\n";
+  std::cout << std::dec << "ACCOUNT_STATUS_TYPE   : " << (int)R_PACK.Rad_Acct_Stat << "\n";
   std::cout << std::dec << "FRAMED_IPV4           : " 
-    << (int)Rpack.FrIp4[0] << "." 
-    << (int)Rpack.FrIp4[1] << "." 
-    << (int)Rpack.FrIp4[2] << "." 
-    << (int)Rpack.FrIp4[3] << "\n";
+    << (int)R_PACK.FrIp4[0] << "." 
+    << (int)R_PACK.FrIp4[1] << "." 
+    << (int)R_PACK.FrIp4[2] << "." 
+    << (int)R_PACK.FrIp4[3] << "\n";
 
   std::cout << "FRAMED_IPV6_PREFIX    : ";
-  for (int i=0; i<Rpack.FrIp6Length-IPV6_PREFIX_HEAD_LENGTH; i++){
+  for (int i=0; i<R_PACK.FrIp6Length-IPV6_PREFIX_HEAD_LENGTH; i++){
     std::cout << std::hex 
       << std::setw(2)
       << std::setfill('0')
       //<< std::setiosflags(ios::left)
-      << (int) Rpack.FrIp6[i]; 
+      << (int) R_PACK.FrIp6[i]; 
   }
-  //std::cout << "/::" << std::dec << (int)Rpack.FrIp6Type << "\n";
-  //std::cout << std::dec << "\nLength: " << (int)Rpack.FrIp6Length << "\n";
-  std::cout<< std::dec << "\nCALLING_STATION_ID    : " << Rpack.number << "\n\n";
+  std::cout<< std::dec << "\nCALLING_STATION_ID    : " << R_PACK.number << "\n\n";
 }
 
 void DisplayPacketInfo(){
   std::cout << "\n";
-  std::cout<< "---------PACKET: " << count << " ---------\n";
-  std::cout << "Radius Attribute Count: " << Rpack.rad_attrcount << "\n";
-  std::cout << "Radius Code           : " << Rpack.rad_code << "\n";
-  std::cout << "Radius Message ID     : " << Rpack.rad_msgID << "\n";
+  std::cout<< "---------PACKET: " << COUNT << " ---------\n";
+  std::cout << "Radius Attribute COUNT: " << R_PACK.rad_attrCOUNT << "\n";
+  std::cout << "Radius Code           : " << R_PACK.rad_code << "\n";
+  std::cout << "Radius Message ID     : " << R_PACK.rad_msgID << "\n";
   std::cout << "Radius Attributes:- \n";
   DisplayAttributes();
 }
@@ -161,26 +153,26 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
 
   switch(code){
     case ACCOUNT_STATUS_TYPE:
-      //Account Status
-      Rpack.attr_accStatusType.type = radiusAttribute.getType();
-      Rpack.attr_accStatusType.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_accStatusType.totalSize = radiusAttribute.getTotalSize();
-      strncpy(Rpack.attr_accStatusType.value,(char*)radiusAttribute.getValue(),1);
+      //AcCOUNT Status
+      R_PACK.attr_accStatusType.type = radiusAttribute.getType();
+      R_PACK.attr_accStatusType.dataSize = radiusAttribute.getDataSize();
+      R_PACK.attr_accStatusType.totalSize = radiusAttribute.getTotalSize();
+      strncpy(R_PACK.attr_accStatusType.value,(char*)radiusAttribute.getValue(),1);
       break;
     case FRAMED_IPV4:
       //Framed IP
-      Rpack.attr_framedIpv4.type = radiusAttribute.getType();
-      Rpack.attr_framedIpv4.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_framedIpv4.totalSize = radiusAttribute.getTotalSize();
-      //Rpack.attr_framedIpv4.value.assign(radiusAttribute.getValue());
+      R_PACK.attr_framedIpv4.type = radiusAttribute.getType();
+      R_PACK.attr_framedIpv4.dataSize = radiusAttribute.getDataSize();
+      R_PACK.attr_framedIpv4.totalSize = radiusAttribute.getTotalSize();
+      //R_PACK.attr_framedIpv4.value.assign(radiusAttribute.getValue());
       break;
 
     case CALLING_STATION_ID:
       // MSISDN
-      Rpack.attr_callingStationId.type = radiusAttribute.getType();
-      Rpack.attr_callingStationId.dataSize = radiusAttribute.getDataSize();
-      Rpack.attr_callingStationId.totalSize = radiusAttribute.getTotalSize();
-      strncpy(Rpack.attr_callingStationId.value,(char*)radiusAttribute.getValue(),13);
+      R_PACK.attr_callingStationId.type = radiusAttribute.getType();
+      R_PACK.attr_callingStationId.dataSize = radiusAttribute.getDataSize();
+      R_PACK.attr_callingStationId.totalSize = radiusAttribute.getTotalSize();
+      strncpy(R_PACK.attr_callingStationId.value,(char*)radiusAttribute.getValue(),13);
       break;
 
      default:
@@ -199,8 +191,8 @@ int extract_ethernetLayerData(pcpp::EthLayer* ethernetLayer){
   if(ethernetLayer == NULL){
     return 0;
   }
-  strcpy(Rpack.mac_src,(char*)ethernetLayer->getSourceMac().toString().c_str());
-  strcpy(Rpack.mac_src,(char*)ethernetLayer->getDestMac().toString().c_str());
+  strcpy(R_PACK.mac_src,(char*)ethernetLayer->getSourceMac().toString().c_str());
+  strcpy(R_PACK.mac_src,(char*)ethernetLayer->getDestMac().toString().c_str());
   return 1;
 }
 */
@@ -214,8 +206,8 @@ int extract_ipv4LayerData(pcpp::IPv4Layer* ipv4Layer){
   if(ipv4Layer == NULL){
     return 0;
   }  
-  strcpy(Rpack.ipv4_src,(char*)ipv4Layer->getSrcIpAddress().toString().c_str());
-  strcpy(Rpack.ipv4_dst,(char*)ipv4Layer->getDstIpAddress().toString().c_str());
+  strcpy(R_PACK.ipv4_src,(char*)ipv4Layer->getSrcIpAddress().toString().c_str());
+  strcpy(R_PACK.ipv4_dst,(char*)ipv4Layer->getDstIpAddress().toString().c_str());
   return 1;
 }
 */
@@ -228,147 +220,140 @@ int extract_udpLayerData(pcpp::UdpLayer* udpLayer){
   if(udpLayer == NULL){
     return 0;
   }
-  Rpack.port_src = (int)ntohs(udpLayer->getUdpHeader()->portSrc);
-  Rpack.port_dst = (int)ntohs(udpLayer->getUdpHeader()->portDst);
+  R_PACK.port_src = (int)ntohs(udpLayer->getUdpHeader()->portSrc);
+  R_PACK.port_dst = (int)ntohs(udpLayer->getUdpHeader()->portDst);
   return 1;
 }
 */
 
 // ---------------------------------RADIUS-------------------------------------------------
-// Reads Attributes byte by byte
-// for example: --- 28 06 00 00 00 02 --- 
-// 28 = dec(28) = 40 (Acct-Status-Type)
-// 06 = total length
-// 00 00 00 02 = value =  2 (stop)
-// bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4
-// In case of adding new attribute
-// Please refer to proper documentation to get these values.
 int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
+  /* Reads Attributes byte by byte 
+   *  For example: --- 28 06 00 00 00 02 --- 
+   *  28 = dec(28) = 40 (Acct-Status-Type) 
+   *  06 = total length 
+   *  00 00 00 02 = value =  2 (stop) 
+   *  bytes for data (4) are calculated  [total:6] - [bytesforlength:1] - [bytesforcode:1] = 4 
+   *
+   * In case of adding new attribute 
+   * Please refer to proper documentation to get these values.
+   *
+   * In this function the loop for reading bytes breaks when the sum_check equals zero.
+   * Hence, only 4 attributes are read. In order to extract more attributes make sure to add
+   * attribute type to switch_case and change the condition for sum_check.
+   *
+   * Attributes:
+   *  Framed-IPv4,
+   *  Acct-Status,
+   *  IPv6-Prefix,
+   *  MSISDN
+   *
+   * Attributes are read after skipping
+   *  Radius Authenticator
+   *  Radius Length indicator
+   *  Radius ID
+   *  
+   * All of the above has been done to  keep this extraction as efficient as possible.
+   */
   int sum_check = 0;
   unsigned int length = radiusLayer->getHeaderLen();
   uint8_t bArray[MAX_RADIUS_PACKET_LENGTH];
   radiusLayer->copyData(bArray);
   int skip = RADIUS_AUTHENTICATOR_LENGTH + RADIUS_LENGTH_ID + RADIUS_IDENTIFIER_LENGTH +1;
-  int counter = skip;
-  //std::cout<< "skip "<< skip << "\n";
-  while(counter < length -1){
+  int COUNTer = skip;
+  while(COUNTer < length -1){
     if(sum_check == 4){
       break;
     }
-    int code = bArray[counter];
-    int length = bArray[counter+1];
-    //std::cout << " for code: " <<  code;
-    //std::cout << " counter: " << counter;
-    //std::cout << " sum= " << sum_check;
+    int code = bArray[COUNTer];
+    int length = bArray[COUNTer+1];
     unsigned long multiplier = 1;
     switch(code){
 
       case ACCOUNT_STATUS_TYPE:
-        //std::cout << "\n\tAtt code: " << code << " ";
-        //std::cout << "\n\tlength  : " << length << " ";
-        Rpack.Rad_Acct_Stat = (int)bArray[counter+5]; 
-        //std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
+        R_PACK.Rad_Acct_Stat = (int)bArray[COUNTer+5]; 
         sum_check++;
         break;
 
       case FRAMED_IPV4:
-        //std::cout << "\n\tFr code: " << code << " ";
-        //std::cout << "\n\tFr len :  " << length << " ";
-        Rpack.FrIp4[0] = bArray[counter + 2];
-        Rpack.FrIp4[1] = bArray[counter + 3];
-        Rpack.FrIp4[2] = bArray[counter + 4];
-        Rpack.FrIp4[3] = bArray[counter + 5];
-        
-        //std::cout << "\n\tFr IP:   " << FrIp4[0] << "." << FrIp4[1] << "." << FrIp4[2] << "." << FrIp4[3] << "\n";
+        /*
+         * saved as int array
+         */
+        R_PACK.FrIp4[0] = bArray[COUNTer + 2];
+        R_PACK.FrIp4[1] = bArray[COUNTer + 3];
+        R_PACK.FrIp4[2] = bArray[COUNTer + 4];
+        R_PACK.FrIp4[3] = bArray[COUNTer + 5];
         sum_check++;
         break;
 
       case CALLING_STATION_ID:
-        //std::cout << "\n\tCall code: " << code << " ";
-        //std::cout << "\n\tCall Leng: " << length << " ";
+        /*
+         * MSISDN 
+         * saved as unsigned int 64
+         *
+         */
         multiplier = 1;
-        Rpack.number = 0;
+        R_PACK.number = 0;
         for(int i=length-1; i>1; i--){
           unsigned long temp;
-          temp = (bArray[counter + i] - 48)  * multiplier;
-          Rpack.number = Rpack.number + temp;
+          temp = (bArray[COUNTer + i] - 48)  * multiplier;
+          R_PACK.number = R_PACK.number + temp;
           multiplier = multiplier * 10;
         }
-        //std::cout << "\n\tnumber   : " << number << " ";
-        //std::cout << "\n";
         sum_check++;
         break;
 
       case IPV6_PREFIX_TYPE:
-        //std::cout<< "THIS IS IPV6:";
-        //std::cout<< count << "\n"; 
-        //std::cout << "length: " << length << "\n";
         for(int i=IPV6_PREFIX_HEAD_LENGTH; i<=length-1; i++){
-          Rpack.FrIp6[i-IPV6_PREFIX_HEAD_LENGTH] = bArray[counter+i];
-          //std::cout<< std::hex << (int) Rpack.FrIp6[i-2] << ":";
-          //std::cout<< bArray[counter+i]<< ":";
+          R_PACK.FrIp6[i-IPV6_PREFIX_HEAD_LENGTH] = bArray[COUNTer+i];
         }
-        Rpack.FrIp6Length = length; 
-        Rpack.FrIp6Type = bArray[length];
-        DisplayPacketInfo();
-        //std::cout<<"\n";
+        R_PACK.FrIp6Length = length; 
+        R_PACK.FrIp6Type = bArray[length];
+        //DisplayPacketInfo();
         break;
 
       default:
-        //std::cout << " DEF ";
+        //un-needed attributes
         break;
     } 
-    //std::cout << "\n";
     if (length == 0){
-      counter = counter + 1;
+      COUNTer = COUNTer + 1;
     }
-    counter = counter + length;
+    COUNTer = COUNTer + length;
     
   }
-/*
-  counter = skip; 
-  while(counter < length ){
-    unsigned int i= bArray[counter];
-    std::cout << "bArray[ " << counter << "]" ;
-    std::cout <<  bArray[counter] << " ";
-    std::cout << " val2 " << i << "\n";
-    counter++;
-  }
-*/
+
 }
 
-//Handle Radius Packet
 int handle_radius(pcpp::Packet& packet){
-  count++;
+  /* INPUT: PCPP::PACKET
+   * Handles radius packets.
+   * Further gets attributes by calling 
+   * readAttributebyBytes function.
+   */
+  COUNT++;
 
   //skip the packets that are not of type radius
   if(!packet.isPacketOfType(pcpp::Radius)){
-    not_radius++;
+    NOT_RADIUS++;
     return 1;
   }
 
-  //extract_ethernetLayerData(packet.getLayerOfType<pcpp::EthLayer>());
-  //extract_ipv4LayerData(packet.getLayerOfType<pcpp::IPv4Layer>());
-  //extract_udpLayerData(packet.getLayerOfType<pcpp::UdpLayer>());
-
+  //get Radius Layer
   pcpp::RadiusLayer* radiusLayer = packet.getLayerOfType<pcpp::RadiusLayer>();
-  totalRadiusPackets++;
+  TOTAL_RADIUS_PACKETS++;
   
   if(radiusLayer==NULL){
     std::cout<<"Couldn't read radius Layer\n";
     return 1;
   }
   
-  Rpack.rad_attrcount = radiusLayer->getAttributeCount();
-  Rpack.rad_msgID = radiusLayer->getRadiusHeader()->id;
-  Rpack.rad_code = radiusLayer->getRadiusHeader()->code;
-  //readAttributebyBytes(rawData,packet_length);
-  readAttributebyBytes(radiusLayer);
-  //pcpp::RadiusAttribute radiusAttribute = radiusLayer->getFirstAttribute();
+  R_PACK.rad_attrCOUNT = radiusLayer->getAttributeCount();
+  R_PACK.rad_msgID = radiusLayer->getRadiusHeader()->id;
+  R_PACK.rad_code = radiusLayer->getRadiusHeader()->code;
 
-  //GetRadiusAttribute(radiusLayer,Rpack.attr_accStatusType.code);
-  //GetRadiusAttribute(radiusLayer,Rpack.attr_framedIpv4.code);
-  //GetRadiusAttribute(radiusLayer,Rpack.attr_callingStationId.code);
+  //Read radius attributes
+  readAttributebyBytes(radiusLayer);
 
   return 1; 
 }
@@ -403,9 +388,9 @@ int main(int argc, char* argv[]){
     
     for(int i=0; i<total_reps; i++){
       //Reset variables for next iteration
-      count = 0;
-      totalRadiusPackets = 0;
-      not_radius = 0;
+      COUNT = 0;
+      TOTAL_RADIUS_PACKETS = 0;
+      NOT_RADIUS = 0;
       pcpp::IFileReaderDevice* reader = pcpp::IFileReaderDevice::getReader(argv[1]);
 
       //Check FileType -- Error 
@@ -426,12 +411,12 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<1000){
+        while(reader->getNextPacket(raw_packet) && TOTAL_RADIUS_PACKETS<99999){
           initialize_PacketInfo();
           pcpp::Packet packet(&raw_packet);
           handle_radius(packet);
           /*
-          if(count==98){
+          if(COUNT==98){
             DisplayAttributes();
           }
           */  
@@ -445,30 +430,22 @@ int main(int argc, char* argv[]){
       }
       auto end = std::chrono::high_resolution_clock::now();
       durations.push_back( end-start );
-      total_packets += count;
+      total_packets += COUNT;
       reader->close();
-    
-
     }
-    
-    
   } 
     auto total_time = std::accumulate(
         durations.begin(),
         durations.end(),
         std::chrono::high_resolution_clock::duration(0)
         );
-
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
     auto total_time_in_ms = duration_cast<milliseconds>(total_time).count();
-    std::cout << "(total_packets:total_reps):\t\t " << totalRadiusPackets << "::" << total_reps << ":: \t" <<total_packets/total_reps<<"\n";
+    std::cout << "(total_packets:total_reps):\t\t " << TOTAL_RADIUS_PACKETS << "::" << total_reps << ":: \t" <<total_packets/total_reps<<"\n";
     std::cout << "(total_time_in_ms/durations.size()):\t " << total_time_in_ms << "/ " << durations.size() << ": \t" << (total_time_in_ms/durations.size())<<"\n";
-    std::cout << "Other Packets:\t\t\t\t" << not_radius << "\n";
-    std::cout << "Total Packets:\t\t\t\t" << count << "\n";
+    std::cout << "Other Packets:\t\t\t\t" << NOT_RADIUS << "\n";
+    std::cout << "Total Packets:\t\t\t\t" << COUNT << "\n";
     std::cout << "Average Total Time(ms): \t\t" << total_time_in_ms/durations.size() << "\n";
-    std::cout << "Average Time/Packet(ms): \t\t" <<(double)((double)(total_time_in_ms/durations.size())/count)<< "\n";
-
-    
-  
+    std::cout << "Average Time/Packet(ms): \t\t" <<(double)((double)(total_time_in_ms/durations.size())/COUNT)<< "\n";
 }
