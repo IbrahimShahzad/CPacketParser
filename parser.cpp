@@ -12,6 +12,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <chrono>
 #include <vector>
 #include <numeric>
@@ -22,7 +23,9 @@
 #define ACCOUNT_STATUS_TYPE 40
 #define FRAMED_IPV4 8
 #define CALLING_STATION_ID 31
+#define IPV6_PREFIX_TYPE 97
 #define MAX_RADIUS_PACKET_LENGTH 4096
+#define IPV6_PREFIX_HEAD_LENGTH 2
 
 size_t count = 0;             //total packet count
 size_t totalRadiusPackets = 0;//total radius pacekets
@@ -30,26 +33,26 @@ size_t not_radius = 0;        //not radius packets
 
 //Usage Help
 void printHelp(char* argv[]){
-  std::cout<<"\tusage: "<<*argv<<"<input> <packets> <repetitions>\n";
-  std::cout<<"\t<input>      \tEither a pcap file or type N to listen via interface\n";
-  std::cout<<"\t<packet>     \tEnter packet type. (radius, dns, udp etc)\n";
-  std::cout<<"\t<repetitions>\tEnter number of times the program needs to run. (Benchmarking)\n";
-  std::cout<<"\t\t\tUse 1 if not using a pcap file\n";
-  std::cout<<"\texample usage: /parser Radius.pcap radius 5\n";
+  std::cout << "\n\n";
+  std::cout << "\tusage: "<<*argv<<" <input> <packets> <repetitions>\n";
+  std::cout << "\t<input>      \tEither a pcap file or type N to listen via interface\n";
+  std::cout << "\t<packet>     \tEnter packet type. (radius, dns, udp etc)\n";
+  std::cout << "\t<repetitions>\tEnter number of times the program needs to run. (Benchmarking)\n";
+  std::cout << "\t\t\tUse 1 if not using a pcap file\n";
+  std::cout << "\texample usage: /parser Radius.pcap radius 5\n";
+  std::cout << "\n";
   exit(1);
 }
 
+/*
 uint8_t  Rad_Acct_Stat = 0;
-//int  Rad_Acct_Stat = 0;
-// Framed IP set
 uint8_t FrIp4[4];
-//int  FrIp4[4];
-//unsigned int IPv4_1 = 0;
-//unsigned int IPv4_2 = 0;
-//unsigned int IPv4_3 = 0;
-//unsigned int IPv4_4 = 0;
 uint64_t number;
-//unsigned long number;
+uint8_t FrIp6[20];
+uint8_t FrIp6Length;
+uint8_t FrIp6Type;
+*/
+int ipv6_byte = 0;
 
 struct Radius_Attribute{
   int code;
@@ -72,9 +75,13 @@ struct PacketInfo{
   int rad_msgID;
   //code message string
   //Attributes-------
-  Radius_Attribute attr_framedIpv4;
-  Radius_Attribute attr_accStatusType;
-  Radius_Attribute attr_callingStationId;
+  uint8_t  Rad_Acct_Stat = 0;
+  uint8_t FrIp4[4];
+  uint64_t number;
+  uint8_t FrIp6[20];
+  uint8_t FrIp6Length;
+  uint8_t FrIp6Type;
+
 };
 
 // Global
@@ -91,68 +98,60 @@ void initialize_PacketInfo(){
   Rpack.rad_attrcount = 0;
   Rpack.rad_code = 0;
   Rpack.rad_msgID = 0;
+  
+  //Attributes
+  Rpack.Rad_Acct_Stat = 0;
+  Rpack.number = 0;
+  int temp1, temp2;
+  temp1 = temp2 = 0;
+  while (temp2 < 20){
+    Rpack.FrIp4[temp1]=0;
+    Rpack.FrIp6[temp2]=0;
+    if(temp2%5==0){
+      temp1++;
+    }
+    temp2++;
+  }
+  Rpack.FrIp6Length = 0; //length of attribute in bytes
+  Rpack.FrIp6Type = 0; // 64
 
-  Rpack.attr_accStatusType.code = ACCOUNT_STATUS_TYPE;
-  strcpy(Rpack.attr_accStatusType.value," ");
-  Rpack.attr_accStatusType.type = -1;
-  Rpack.attr_accStatusType.dataSize = -1;
-  Rpack.attr_accStatusType.totalSize = -1;
-
-  Rpack.attr_framedIpv4.code = FRAMED_IPV4;
-  strcpy(Rpack.attr_framedIpv4.value," ");
-  Rpack.attr_framedIpv4.type = -1;
-  Rpack.attr_framedIpv4.dataSize = -1;
-  Rpack.attr_framedIpv4.totalSize = -1;
-
-  Rpack.attr_callingStationId.code = CALLING_STATION_ID;
-  strcpy(Rpack.attr_callingStationId.value," ");
-  Rpack.attr_callingStationId.type = -1;
-  Rpack.attr_callingStationId.dataSize = -1;
-  Rpack.attr_callingStationId.totalSize = -1;
 }
 
 void DisplayAttributes(){
   std::cout << "\n";
-  std::cout << std::dec << "ACCOUNT_STATUS_TYPE: " << Rad_Acct_Stat << "\n";
-  std::cout << std::dec << "FRAMED_IPV4: " << FrIp4[0] << "." 
-    << FrIp4[1] << "." 
-    << FrIp4[2] << "." 
-    << FrIp4[3] << "\n"; 
-  std::cout<< std::dec << "CALLING_STATION_ID: " << number << "\n\n";
+  std::cout << std::dec << "ACCOUNT_STATUS_TYPE   : " << (int)Rpack.Rad_Acct_Stat << "\n";
+  std::cout << std::dec << "FRAMED_IPV4           : " 
+    << (int)Rpack.FrIp4[0] << "." 
+    << (int)Rpack.FrIp4[1] << "." 
+    << (int)Rpack.FrIp4[2] << "." 
+    << (int)Rpack.FrIp4[3] << "\n";
+
+  std::cout << "FRAMED_IPV6_PREFIX    : ";
+  for (int i=0; i<Rpack.FrIp6Length-IPV6_PREFIX_HEAD_LENGTH; i++){
+    std::cout << std::hex 
+      << std::setw(2)
+      << std::setfill('0')
+      //<< std::setiosflags(ios::left)
+      << (int) Rpack.FrIp6[i]; 
+  }
+  //std::cout << "/::" << std::dec << (int)Rpack.FrIp6Type << "\n";
+  //std::cout << std::dec << "\nLength: " << (int)Rpack.FrIp6Length << "\n";
+  std::cout<< std::dec << "\nCALLING_STATION_ID    : " << Rpack.number << "\n\n";
 }
 
 void DisplayPacketInfo(){
   std::cout << "\n";
+  std::cout<< "---------PACKET: " << count << " ---------\n";
   std::cout << "Radius Attribute Count: " << Rpack.rad_attrcount << "\n";
   std::cout << "Radius Code           : " << Rpack.rad_code << "\n";
   std::cout << "Radius Message ID     : " << Rpack.rad_msgID << "\n";
   std::cout << "Radius Attributes:- \n";
-
-  std::cout << "\tRadius Account Status\n";
-  std::cout << "\t\t\t code:      " << Rpack.attr_accStatusType.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_accStatusType.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_accStatusType.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_accStatusType.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_accStatusType.totalSize << "\n";
-  
-  std::cout << "\tCalling Station ID\n";
-  std::cout << "\t\t\t code:      " << Rpack.attr_callingStationId.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_callingStationId.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_callingStationId.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_callingStationId.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_callingStationId.value << "\n";
-
-  std::cout << "\tFramed IPv4\n"; 
-  std::cout << "\t\t\t code:      " << Rpack.attr_framedIpv4.code << "\n";
-  std::cout << "\t\t\t Type:      " << Rpack.attr_framedIpv4.type << "\n";
-  std::cout << "\t\t\t DataSize:  " << Rpack.attr_framedIpv4.dataSize << "\n";
-  std::cout << "\t\t\t TotalSize: " << Rpack.attr_framedIpv4.totalSize << "\n";
-  std::cout << "\t\t\t Value:     " << Rpack.attr_framedIpv4.value << "\n";
-
+  DisplayAttributes();
 }
 // ----------------------------------------------------------------------------------
 // Does not retrun proper attribute values when non ASCII values read (CAUTION!)
 // ---------------------------------------------------------------------------------
+/*
 int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   pcpp::RadiusAttribute radiusAttribute = radiusLayer->getAttribute(code);
 
@@ -189,6 +188,7 @@ int GetRadiusAttribute(pcpp::RadiusLayer* radiusLayer, int code){
   } 
   return 1;
 }
+*/
 
 // ---------------------------------------------------------------------------------
 // -----------------------------------ETH-LAYER------------------------------------
@@ -266,7 +266,7 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
       case ACCOUNT_STATUS_TYPE:
         //std::cout << "\n\tAtt code: " << code << " ";
         //std::cout << "\n\tlength  : " << length << " ";
-        Rad_Acct_Stat = (int)bArray[counter+5]; 
+        Rpack.Rad_Acct_Stat = (int)bArray[counter+5]; 
         //std::cout << "\n\tvalue   : " << Rad_Acct_Stat << "\n";
         sum_check++;
         break;
@@ -274,10 +274,10 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
       case FRAMED_IPV4:
         //std::cout << "\n\tFr code: " << code << " ";
         //std::cout << "\n\tFr len :  " << length << " ";
-        FrIp4[0] = bArray[counter + 2];
-        FrIp4[1] = bArray[counter + 3];
-        FrIp4[2] = bArray[counter + 4];
-        FrIp4[3] = bArray[counter + 5];
+        Rpack.FrIp4[0] = bArray[counter + 2];
+        Rpack.FrIp4[1] = bArray[counter + 3];
+        Rpack.FrIp4[2] = bArray[counter + 4];
+        Rpack.FrIp4[3] = bArray[counter + 5];
         
         //std::cout << "\n\tFr IP:   " << FrIp4[0] << "." << FrIp4[1] << "." << FrIp4[2] << "." << FrIp4[3] << "\n";
         sum_check++;
@@ -287,11 +287,11 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
         //std::cout << "\n\tCall code: " << code << " ";
         //std::cout << "\n\tCall Leng: " << length << " ";
         multiplier = 1;
-        number = 0;
+        Rpack.number = 0;
         for(int i=length-1; i>1; i--){
           unsigned long temp;
           temp = (bArray[counter + i] - 48)  * multiplier;
-          number = number + temp;
+          Rpack.number = Rpack.number + temp;
           multiplier = multiplier * 10;
         }
         //std::cout << "\n\tnumber   : " << number << " ";
@@ -299,9 +299,19 @@ int readAttributebyBytes(pcpp::RadiusLayer* radiusLayer){
         sum_check++;
         break;
 
-      case 97:
+      case IPV6_PREFIX_TYPE:
         //std::cout<< "THIS IS IPV6:";
         //std::cout<< count << "\n"; 
+        //std::cout << "length: " << length << "\n";
+        for(int i=IPV6_PREFIX_HEAD_LENGTH; i<=length-1; i++){
+          Rpack.FrIp6[i-IPV6_PREFIX_HEAD_LENGTH] = bArray[counter+i];
+          //std::cout<< std::hex << (int) Rpack.FrIp6[i-2] << ":";
+          //std::cout<< bArray[counter+i]<< ":";
+        }
+        Rpack.FrIp6Length = length; 
+        Rpack.FrIp6Type = bArray[length];
+        DisplayPacketInfo();
+        //std::cout<<"\n";
         break;
 
       default:
@@ -416,11 +426,15 @@ int main(int argc, char* argv[]){
         start = std::chrono::high_resolution_clock::now();
         pcpp::RawPacket raw_packet;
         
-        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<99999){
-          pcpp::Packet packet(&raw_packet);
+        while(reader->getNextPacket(raw_packet) && totalRadiusPackets<1000){
           initialize_PacketInfo();
+          pcpp::Packet packet(&raw_packet);
           handle_radius(packet);
-        //  DisplayAttributes();
+          /*
+          if(count==98){
+            DisplayAttributes();
+          }
+          */  
         }
       }else{
           std::cout << "Not yet\n";
