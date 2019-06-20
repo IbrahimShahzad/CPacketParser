@@ -1,11 +1,13 @@
 include /usr/local/etc/PcapPlusPlus.mk
 
+# All Target
 all:
-	g++ $(PCAPPP_INCLUDES) -O2 -std=c++0x -c -o parser.o parser.cpp
-	g++ $(PCAPPP_LIBS_DIR) -static-libstdc++ -o parser parser.o $(PCAPPP_LIBS)
+	g++ $(PCAPPP_BUILD_FLAGS) $(PCAPPP_INCLUDES) -c -o WorkerThread.o WorkerThread.cpp
+	g++ $(PCAPPP_BUILD_FLAGS) $(PCAPPP_INCLUDES) -c -o receiver.o receiver.cpp
+	g++ $(PCAPPP_LIBS_DIR) -static-libstdc++ -o DpdkL2Fwd WorkerThread.o receiver.o $(PCAPPP_LIBS)
 
+# Clean Target
 clean:
-	rm parser.o
-	rm parser
-
-
+	rm receiver.o
+	rm WorkerThread.o
+	rm DpdkL2Fwd
