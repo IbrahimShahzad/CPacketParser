@@ -3,7 +3,7 @@
 #include "DpdkDevice.h"
 #include "DpdkDeviceList.h"
 
-class L2FwdWorkerThread : public pcpp::DpdkWorkerThread
+class WorkerThread : public pcpp::DpdkWorkerThread
 {
   private:
     pcpp::DpdkDevice* m_RxDevice;
@@ -13,11 +13,11 @@ class L2FwdWorkerThread : public pcpp::DpdkWorkerThread
 
   public:
     //constructor
-    L2FwdWorkerThread(pcpp::DpdkDevice* rxDevice, pcpp::DpdkDevice* txDevice);
+    WorkerThread(pcpp::DpdkDevice* rxDevice, pcpp::DpdkDevice* txDevice);
 
     //Destructor (Does Nothing)
     
-    ~L2FwdWorkerThread(){
+    ~WorkerThread(){
     }
 
     //start worker thread
