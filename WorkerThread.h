@@ -3,6 +3,7 @@
 #include "DpdkDevice.h"
 #include "DpdkDeviceList.h"
 
+#define MAX_RECEIVE_BURST 64
 class WorkerThread : public pcpp::DpdkWorkerThread
 {
   private:
