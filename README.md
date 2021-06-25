@@ -102,6 +102,3 @@ bytes for data (4) are calculated  as follows:
 
 ---
 
-## Github Repo
-
-[<font color="blue">Checkout the github Repo here</font>](https://github.com/IbrahimShahzad/CPacketParser)
