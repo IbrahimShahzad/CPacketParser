@@ -104,7 +104,7 @@ uint16_t getRadiusLength(char* pStartOfRadiusLayer);
  * @see radiusAttributesList.h
  * @see userSession.h
  */
-int readRadiusAttributes(char* radiusPointer,uint16_t RadiusLength);
+int readRadiusAttributes(char* pcRadiusLayerPointer,uint16_t u16RadiusLength);
 
 
 /**
