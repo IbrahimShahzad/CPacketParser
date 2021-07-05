@@ -21,13 +21,10 @@
 #define SECTION_MODULES "MODULES"
 #define SECTION_PORT "PORT LCORE PARAMS"
 #define SECTION_RECEIVER "RECEIVER PARAMS"
-// #define SECTION_DATAPATH "DATAPATH PARAMS"       //TODO: remove
-// #define SECTION_CORRELATOR "CORRELATOR PARAMS"   //TODO: remove
-// #define SECTION_PE "POLICY ENFORCER PARAMS"      //TODO: remove
 #define SECTION_PORT_CFG_DATAPATH "FORWARDING PORTS"
 
 #define RTE_LOGTYPE_RP  RTE_LOGTYPE_USER3
-#define acl_log(format, ...)  RTE_LOG(ERR, SIFT, format, ##__VA_ARGS__)
+#define acl_log(format, ...)  RTE_LOG(ERR, RP, format, ##__VA_ARGS__)
 
 //struct rte_cfgfile * pConfigFile;
 struct rte_cfgfile_entry MODULES[MAX_ENTRIES];
