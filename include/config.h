@@ -17,7 +17,6 @@
 #define SECTION_DB "DB CRED"
 #define SECTION_EAL "EAL PARAMS"
 #define SECTION_APP "APP PARAMS"
-#define SECTION_LOG "LOG PARAMS"
 #define SECTION_MODULES "MODULES"
 #define SECTION_PORT "PORT LCORE PARAMS"
 #define SECTION_RECEIVER "RECEIVER PARAMS"
@@ -26,7 +25,6 @@
 #define RTE_LOGTYPE_RP  RTE_LOGTYPE_USER3
 #define acl_log(format, ...)  RTE_LOG(ERR, RP, format, ##__VA_ARGS__)
 
-//struct rte_cfgfile * pConfigFile;
 struct rte_cfgfile_entry MODULES[MAX_ENTRIES];
 struct rte_cfgfile_entry DB_CRED[MAX_ENTRIES];
 struct rte_cfgfile_entry EAL_PARAMS[MAX_ENTRIES];
@@ -35,8 +33,6 @@ struct rte_cfgfile_entry LOG_PARAMS[MAX_ENTRIES];
 struct rte_cfgfile_entry PORT_LCORE_PARAMS[MAX_ENTRIES];
 struct rte_cfgfile_entry RECEIVER_PARAMS[MAX_ENTRIES];
 struct rte_cfgfile_entry DATAPATH_PARAMS[MAX_ENTRIES];
-struct rte_cfgfile_entry CORRELATOR_PARAMS[MAX_ENTRIES];
-struct rte_cfgfile_entry POLICY_ENFORCER_PARAMS[MAX_ENTRIES];
 struct rte_cfgfile_entry PORT_CFG_DATAPATH[MAX_ENTRIES];
 
 struct rte_cfgfile *g_pConfigFile; /**< global Config File pointer */

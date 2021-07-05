@@ -2,8 +2,7 @@
 
 #define ERROR -1
 
-int
-loadConfigFile(void)
+int loadConfigFile(void)
 {
     if (g_pConfigFile == NULL) {
         g_pConfigFile = rte_loadConfigFile(CONFIG_FILE, DEFAULT_COMMENT_CHARACTER);
@@ -14,8 +13,7 @@ loadConfigFile(void)
     return 0;
 }
 
-int 
-unloadConfigFile(void)
+int unloadConfigFile(void)
 {
     if (g_pConfigFile != NULL) {
         int ret = rte_cfgfile_close(g_pConfigFile);
@@ -25,20 +23,17 @@ unloadConfigFile(void)
     return ERROR;
 }
 
-int
-sectionExists(const char *pSectionName)
+int sectionExists(const char *pSectionName)
 {
     return rte_cfgfile_has_section(g_pConfigFile, pSectionName);
 }
 
-int 
-entryExists(const char *pSectionName, const char *pEntryName)
+int entryExists(const char *pSectionName, const char *pEntryName)
 {
     return rte_cfgfile_has_entry(g_pConfigFile, pSectionName, pEntryName);
 }
 
-int
-getSectionEntries(const char *pSectionName, struct rte_cfgfile_entry *pEntries)
+int getSectionEntries(const char *pSectionName, struct rte_cfgfile_entry *pEntries)
 {
     return rte_cfgfile_section_entries(g_pConfigFile, pSectionName, pEntries, MAXIMUM_NB_ENTRIES);
 }
