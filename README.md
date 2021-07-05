@@ -1,6 +1,6 @@
 # CPacketParser
 
-A RADIUS parser written using C++ and PcapPlusPlus (wrapper for C-DPDK). 
+A RADIUS parser written in C-DPDK. 
 It extracts attributes from the RADIUS layer.
 
 
