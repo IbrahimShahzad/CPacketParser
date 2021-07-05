@@ -7,7 +7,7 @@
  */
 #define RADIUS_CODE_FIELD 1 /**< Number of bytes reserved for Code field */
 #define RADIUS_LENGTH_FIELD_LENGTH 2/**< Number of bytes reserved for length field */
-#define RADIUS_IDENTIFIER_FIELD_LENGTH 1/**< Number of bytes reserved for indentifier field */
+#define RADIUS_IDENTIFIER_FIELD_LENGTH 1/**< Number of bytes reserved for identifier field */
 #define RADIUS_AUTHENTICATOR_FIELD_LENGTH 16/**< Number of bytes reserved for authenticator field */
 
 
