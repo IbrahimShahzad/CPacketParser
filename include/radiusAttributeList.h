@@ -1,7 +1,7 @@
 /**
  * @file radiusAttributesList.h
  * @brief This file contains the radius attributes and associated code values in decimal
- * @author ibrahim,
+ * @author IbrahimShahzad
  * @date 12 Sep 2020
  * @see https://www.iana.org/assignments/radius-types/radius-types.xhtml
  */
