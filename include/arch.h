@@ -21,6 +21,8 @@
 #define MAX_MODULES 8               /**< Number of Maximum Modules */
 #define RING_SIZE 1048576           /**< Ring Buffer Size */
 #define MSISDN_LEN  14              /**< Number of digits in an MSISDN no. (12 + 1) */
+#define MAX_NAME_LENGTH 50
+
 struct rte_hash *pUserHashTable;    /** To hold active sessions */
 
 /**
@@ -29,7 +31,7 @@ struct rte_hash *pUserHashTable;    /** To hold active sessions */
  * Map for Modules associated Lcore, Rx Port, Rx Queue and Instance Number.
  */
 struct ArchMap {
-    char pModuleName[50];
+    char pModuleName[MAX_NAME_LENGTH];
     uint8_t u8Lcore;                /**< logical core for module */
     uint8_t u8Port;                 /**< Receiving port for module */
     uint8_t u8Queue;                /**< Receiving queue for module */
