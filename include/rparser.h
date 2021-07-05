@@ -17,7 +17,7 @@
 #include <rte_mbuf.h>
 #include <rte_ip.h>
 #include <rte_malloc.h>
-#include "radiusAttributesList.h"
+#include "radiusAttributeList.h"
 #include "userSession.h"
 #include <time.h>
 #include <rte_ring.h>
@@ -42,6 +42,13 @@
 
 #define RTE_LOGTYPE_RP  RTE_LOGTYPE_USER3 /**< RTE LOG TYPE*/
 #define acl_log(format, ...)  RTE_LOG(ERR, RP, format, ##__VA_ARGS__)
+
+struct RadiusHeaderInfo {
+    uint8_t u8RadiusCode;
+    uint8_t u8RadiusIdentifier;
+    uint16_t u16RadiusLength;
+};
+
 
 /**
  * @brief print port statistics

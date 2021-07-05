@@ -44,6 +44,7 @@ struct UserSessionInfo
 {
     struct tm sSessionStartTime;
     struct tm sSessionEndTime;
+
     uint64_t u64ValidAttributes;
     char *pcUserName;                             /**< text [RFC2865] */
     char *pcUserPassword;                         /**< string [RFC2865]*/
